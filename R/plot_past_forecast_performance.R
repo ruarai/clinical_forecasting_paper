@@ -33,6 +33,9 @@ plot_data_days_ahead <- performance_data %>%
   filter(suffix == "final") %>%
   drop_na(true_count) %>% 
   
+  ## DANGEROUS
+  drop_na(z_CRPS_naive) %>% 
+  
   filter(#run_date < ymd("2022-09-01"),
          run_date >= ymd("2022-03-15")) %>%
   

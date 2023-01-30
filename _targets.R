@@ -41,7 +41,7 @@ list(
   tar_target(
     occupancy_data,
     #get_occupancy_data()
-    read_csv("~/source/clinical_forecasting/data/occupancy/compiled/occupancy_compiled_2022-11-18.csv", show_col_types = FALSE)
+    read_csv("~/source/clinical_forecasting/data/occupancy/compiled/occupancy_compiled_2023-01-12.csv", show_col_types = FALSE)
   ),
   
   tar_target(

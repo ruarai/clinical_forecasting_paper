@@ -1,7 +1,34 @@
 
+library(tidyverse)
+library(lubridate)
+library(targets)
+
+
+tar_make(past_forecasts_data)
+forecast_quants <- tar_read(past_forecasts_data)$quants
+
+
+source("../clinical_forecasting/R/read_occupancy_data.R")
+
+occupancy_data <- read_occupancy_data("../clinical_forecasting/data/occupancy/NAT_2023-01-19_Data for Uni of Melbourne.xlsx")
 
 
 
+ward_base_colour <- "#b53aa0"
+ICU_base_colour <- "#008200"
+
+source("R/plots_common.R")
+
+ward_cols <- shades::opacity(ward_base_colour, c(0.3, 0.6, 1))
+ICU_cols <- shades::opacity(ICU_base_colour, c(0.3, 0.6, 1))
+
+color_list <- list("ward" = ward_cols, "ICU" = ICU_cols)
+
+
+date_min <- ymd("2022-11-29")
+
+forecast_subset_recent <- forecast_quants %>%
+  filter(run_date >= date_min)
 
 
 plot_single_forecast <- function(
@@ -9,35 +36,21 @@ plot_single_forecast <- function(
     i_state, i_group, i_suffix, ylim
 ) {
   
-  
-  ward_base_colour <- "#b53aa0"
-  ICU_base_colour <- "#008200"
-  
-  source("R/plots_common.R")
-  
-  ward_cols <- shades::opacity(ward_base_colour, c(0.3, 0.6, 1))
-  ICU_cols <- shades::opacity(ICU_base_colour, c(0.3, 0.6, 1))
-  color_list <- list("ward" = ward_cols, "ICU" = ICU_cols)
+  forecast_subset <- forecast_subset_recent %>%
+    filter(state == i_state, suffix == i_suffix)
   
   
-  runs <- forecast_quants %>%
-    filter(state == i_state, suffix == i_suffix) %>%
+  runs <- forecast_subset %>%
     distinct(
       run_date,
       case_forecast_start
-    ) %>%
-    arrange(run_date) %>%
-    
-    mutate(id = row_number(),
-           id_mod = (id - 1) %% 3,
-           run_date = ymd(run_date))
+    )
   
-  plot_data_mod <- forecast_quants %>%
-    mutate(run_date = ymd(run_date),
-           is_fit = run_date >= ymd("2022-03-15")) %>%
+  plot_data_mod <- forecast_subset %>%
+    mutate(run_date = ymd(run_date)) %>%
     filter(state == i_state, group == i_group, suffix == i_suffix) %>%
-    left_join(runs, by = c("run_date", "case_forecast_start")) %>%
-    filter(date >= case_forecast_start + ddays(7),
+    left_join(runs %>% mutate(run_date = ymd(run_date)), by = c("run_date", "case_forecast_start")) %>%
+    filter(date >= case_forecast_start + days(7),
            date <= case_forecast_start + ddays(28),
            quant %in% c("50", "70", "90"))
   
@@ -49,43 +62,34 @@ plot_single_forecast <- function(
   ggplot(plot_data_mod) +
     
     geom_ribbon(aes(x = date, ymin = lower, ymax = upper, group = interaction(run_date, quant), fill = quant),
-                plot_data_mod %>% filter(is_fit)) +
-    
-    geom_ribbon(aes(x = date, ymin = lower, ymax = upper, group = interaction(run_date, quant), fill = quant),
-                alpha = 0.2,
-                plot_data_mod %>% filter(!is_fit)) +
+                plot_data_mod) +
     
     geom_point(aes(x = date, y = count),
                color = "white",
                ward_known,
                
-               size = 0.6) +
+               size = 0.4) +
     
     geom_point(aes(x = date, y = count),
                pch = 1,
                color = "grey20",
                ward_known,
 
-               size = 0.8, stroke = 0.9) +
+               size = 0.6, stroke = 0.6) +
 
     geom_vline(aes(xintercept = case_forecast_start + ddays(7)),
                runs, linetype = 'dashed') +
 
-    facet_wrap(~id_mod, ncol = 1, scales = "free") +
+    facet_wrap(~run_date, ncol = 1, scales = "free") +
 
     scale_fill_manual(values = color_list[[i_group]]) +
 
-    # geom_label(aes(x = run_date, y = ylim[2] * 0.95, label = as.character(run_date)),
-    #            vjust = 1, hjust = 0.5, size = 3,
-    #
-    #            data = runs) +
-
     plot_theme +
 
-    scale_x_date(labels = scales::label_date_short(c("%Y", "%B"), sep = " "),
+    scale_x_date(labels = scales::label_date_short(c("", "%b"), sep = " "),
                  date_breaks = "months") +
 
-    coord_cartesian(xlim = c(ymd("2022-09-01"), ymd("2022-11-25")),
+    coord_cartesian(xlim = c(ymd("2022-11-01"), ymd("2023-01-29")),
                     ylim = ylim) +
 
     geom_blank(aes(y = 0)) +
@@ -94,39 +98,28 @@ plot_single_forecast <- function(
 
     theme(legend.position = "none",
           strip.text = element_blank(),
-          axis.line = element_line(),
-          panel.grid = element_blank(),
-          panel.grid.major = element_blank()) +
+          axis.line = element_line()) +
     
     ggtitle(str_c("Forecasted ", i_group, " occupancy"))
 }
 
-library(tidyverse)
-library(lubridate)
-library(targets)
-
-
-forecast_quants <- tar_read(past_forecasts_data)$quants
-occupancy_data <- tar_read(occupancy_data)
-
-
 state_plot_lims <- tribble(
   ~state, ~group, ~ylim,
-  "NSW", "ward", 2200,
-  "NSW", "ICU", 80,
-  "SA", "ward", 200,
+  "NSW", "ward", 2700,
+  "NSW", "ICU", 90,
+  "SA", "ward", 350,
   "SA", "ICU", 15,
-  "VIC", "ward", 500,
-  "VIC", "ICU", 30,
-  "NT", "ward", 50,
+  "VIC", "ward", 1000,
+  "VIC", "ICU", 60,
+  "NT", "ward", 100,
   "NT", "ICU", 10,
-  "WA", "ward", 250,
+  "WA", "ward", 500,
   "WA", "ICU", 20,
-  "QLD", "ward", 400,
-  "QLD", "ICU", 20,
-  "TAS", "ward", 50,
-  "TAS", "ICU", 10,
-  "ACT", "ward", 130,
+  "QLD", "ward", 1000,
+  "QLD", "ICU", 30,
+  "TAS", "ward", 150,
+  "TAS", "ICU", 20,
+  "ACT", "ward", 180,
   "ACT", "ICU", 10
 ) %>%
   pivot_wider(names_from = "group", values_from = "ylim") %>%
@@ -140,21 +133,11 @@ plots <- pmap(
     p_ward <- plot_single_forecast(forecast_quants, occupancy_data, state, "ward", suffix, c(0, ward))
     p_ICU <- plot_single_forecast(forecast_quants, occupancy_data, state, "ICU", suffix, c(0, ICU))
     
-    cowplot::plot_grid(
-      p_ward,
-      p_ICU,
-      
-      ncol = 1, align = 'v', axis = 'tb'
-    )
-    
-    
-    
-    
     p <- cowplot::plot_grid(
       p_ward + ggtitle(str_c(state, " \u2013 Forecasted ward occupancy")),
       p_ICU + ggtitle(str_c(state, " \u2013 Forecasted ICU occupancy")),
       
-      ncol = 1, align = 'v', axis = 'tb'
+      ncol = 2, align = 'v', axis = 'tb'
     )
     
     p
@@ -162,10 +145,90 @@ plots <- pmap(
 })
 
 
-cairo_pdf("results/recent_forecasts.pdf",
-          width = 18 / 2.54, height = 18 / 2.54, onefile = TRUE)
+cairo_pdf(str_c("results/perf/recent_forecasts_", min(forecast_trajs_recent$run_date),
+                "_to_", max(forecast_trajs_recent$run_date), ".pdf"),
+          width = 22 / 2.54, height = 22 / 2.54, onefile = TRUE)
 for (i in 1:length(plots)) {
   plot(plots[[i]])
 }
 dev.off()
 
+
+
+source("R/get_performance_data.R")
+
+
+forecast_trajs <- tar_read(past_forecasts_data)$quants
+
+
+
+forecast_trajs_recent <- forecast_trajs %>%
+  filter(run_date >= date_min + days(7))
+
+
+recent_perf <- get_performance_data(trajs = forecast_trajs_recent, occupancy_data = occupancy_data)
+
+
+
+
+
+
+
+
+coverage <- recent_perf %>%
+  filter(suffix == "final") %>%
+  drop_na(true_count) %>% 
+  
+  expand_grid(
+    quant = c(0, 0.01, seq(0.05, 0.95, by = 0.05), 0.99, 1)
+  ) %>%
+  
+  rowwise() %>%
+  
+  mutate(upper = quantile(forecast_count, 0.5 + quant / 2),
+         lower = quantile(forecast_count, 0.5 - quant / 2)) %>%
+  ungroup() %>%
+  mutate(within = true_count >= lower & true_count <= upper) %>% 
+  
+  group_by(state, group, quant) %>%
+  summarise(within = sum(within) / n())
+
+
+coverage %>%
+  
+  ggplot() +
+  
+  geom_line(aes(x = quant, y = within, colour = group, group = group)) +
+  
+  facet_wrap(~state, ncol = 4) +
+  
+  annotate(geom = "segment", x = 0, xend = 1, y = 0, yend = 1,
+           linetype = 'dashed') +
+  
+  geom_hline(yintercept = 0, colour = 'grey20', size = 0.6) +
+  geom_vline(xintercept = 0, colour = 'grey20', size = 0.6) +
+  
+  coord_fixed(ylim = c(0,1), xlim = c(0,1)) +
+  
+  xlab("Quantile") + ylab("Empirical coverage") +
+  
+  scale_x_continuous(expand = expansion(mult = c(0, 0.05))) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
+  
+  scale_colour_manual(values = c("ward" = ward_base_colour, "ICU" = ICU_base_colour),
+                      labels = c("ward" = "Ward", "ICU" = "ICU"),
+                      name = NULL) +
+  
+  plot_theme +
+  
+  theme(panel.spacing.x = unit(1, "cm"),
+        legend.position = "bottom")
+
+
+ggsave(
+  str_c("results/perf/interval_coverage_", min(forecast_trajs_recent$run_date),
+        "_to_", max(forecast_trajs_recent$run_date), ".png"),
+  
+  width = 8, height = 4.5,
+  bg = "white"
+)
