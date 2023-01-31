@@ -244,18 +244,26 @@ ggsave(
   bg = "white"
 )
 
+source("R/pres/gaussprocess.R")
 
-ward_plot_data <- traj_plot_data %>%
-  filter(compartment == "ward" | compartment == "ICU",
-         name == "count",
-         date >= ymd("2022-05-25")) %>%
-  
-  group_by(compartment) %>% 
-  
-  mutate(false_true_occ = value + 
-           (gaussprocess(m = n(), from = 0, to = 2, K = function(s, t) exp(-32 * (s - t) ^ 2))$xt * 4 + rnorm(n(), 0, 1)) * 
-           if_else(compartment == "ward", 20, 10))
+# ward_plot_data <- traj_plot_data %>%
+#   filter(compartment == "ward" | compartment == "ICU",
+#          name == "count",
+#          date >= ymd("2022-05-25")) %>%
+#   
+#   group_by(compartment) %>% 
+#   
+#   mutate(false_true_occ = value + 
+#            (gaussprocess(m = n(), from = 0, to = 2, K = function(s, t) exp(-32 * (s - t) ^ 2))$xt * 4 + rnorm(n(), 0, 1)) * 
+#            if_else(compartment == "ward", 20, 10))
 
+ward_plot_data <- read_csv("data/pres_trace_ward_plot_data.csv")  %>% 
+  
+  mutate(
+    compartment = factor(compartment, c("symptomatic", "ward", "ICU")),
+    name = factor(name, c("transitions", "count"))
+  )
+  
 
 traj_plot_data %>%
   filter(compartment == "ward" | compartment == "ICU" | compartment == "symptomatic") %>% 
@@ -332,6 +340,32 @@ ggplot() +
   theme(legend.position = "none")
 
 
+p_case_incidence_2 <- ggplot() +
+  
+  geom_ribbon(
+    aes(x = date, ymin = lower * 0.6, ymax = upper * 0.6, fill = quant),
+    case_quants
+  ) +
+  
+  geom_point(
+    aes(x = date_onset, y = count * 0.6),
+    known_cases
+  ) +
+  
+  geom_point(
+    aes(x = date_onset, y = count * 0.6),
+    known_cases,
+    colour = "white", size = 0.4, stroke = 0.4
+  ) +
+  
+  scale_fill_manual(values = case_cols) +
+  
+  occ_plots_common + 
+  
+  coord_cartesian(ylim = c(0, 12000),
+                  xlim = c(ymd("2022-06-01"), ymd("2022-09-04"))) +
+  
+  ylab(NULL)
 
 
 forecast_quants <- sim_results$trajectories %>%
@@ -341,10 +375,10 @@ forecast_quants <- sim_results$trajectories %>%
   make_results_quants()
 
 
-p_ward <- ggplot(forecast_quants %>% filter(group == "ward")) +
+p_ward <- ggplot(forecast_quants %>% filter(group == "ward", date >= ymd("2022-08-10"))) +
   
   geom_ribbon(
-    aes(x = date, ymin = lower * 0.6 - 100, ymax = upper * 0.6 - 100, fill = quant)
+    aes(x = date, ymin = lower * 0.6 , ymax = upper * 0.6, fill = quant)
   ) +
   
   scale_fill_manual(values = ward_cols) +
@@ -361,15 +395,15 @@ p_ward <- ggplot(forecast_quants %>% filter(group == "ward")) +
   scale_x_date(breaks = seq(ymd("2022-06-01"), ymd("2022-09-01"), "months"),
                labels = str_c("Month ", 1:4)) +
   coord_cartesian(xlim = c(ymd("2022-06-01"), ymd("2022-09-05")),
-                  ylim = c(0, NA))  +
+                  ylim = c(0, 1600))  +
   
   ylab(NULL)
 
 
-p_ICU <- ggplot(forecast_quants %>% filter(group == "ICU")) +
+p_ICU <- ggplot(forecast_quants %>% filter(group == "ICU", date >= ymd("2022-08-10"))) +
   
   geom_ribbon(
-    aes(x = date, ymin = lower * 4 - 30, ymax = upper * 4 - 30, fill = quant)
+    aes(x = date, ymin = lower * 4 - 15, ymax = upper * 4 - 15, fill = quant)
   ) +
   
   scale_fill_manual(values = ICU_cols) +
@@ -386,15 +420,20 @@ p_ICU <- ggplot(forecast_quants %>% filter(group == "ICU")) +
   scale_x_date(breaks = seq(ymd("2022-06-01"), ymd("2022-09-01"), "months"),
                labels = str_c("Month ", 1:4)) +
   coord_cartesian(xlim = c(ymd("2022-06-01"), ymd("2022-09-05")),
-                  ylim = c(0, NA))  +
+                  ylim = c(0, 400))  +
   
   ylab(NULL)
 
 
 cowplot::plot_grid(
-  p_ward, ggplot() + theme_void(), p_ICU,
+  p_case_incidence_2,
+  ggplot() + theme_void(),
+  p_ward,
+  ggplot() + theme_void(),
+  p_ICU,
   
-  rel_heights = c(1, 0.1, 1),
+  rel_heights = c(1, 0.1, 1, 0.1, 1),
+  align = "v",
   
   ncol = 1
 )  
@@ -402,8 +441,8 @@ cowplot::plot_grid(
 
 ggsave(
   "results/pres/forecast_final.png",
-  width = 6,
-  height = 4,
+  width = 7,
+  height = 6,
   dpi = 400,
   bg = "white"
 )
