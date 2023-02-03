@@ -28,9 +28,8 @@ traj_plot_data <- sim_results$trajectories_ungrouped %>%
     name = factor(name, c("transitions", "count")),
     
     value = if_else(compartment == "symptomatic", value * 0.75, value),
-    value = if_else(compartment == "ward", value / 2, value),
-    value = if_else(compartment == "ward" & name == "count", value * 1.33, value),
-    value = if_else(compartment == "ICU", value * 4, value)
+    value = if_else(compartment == "ward", value * 1.5, value),
+    value = if_else(compartment == "ICU", value * 2, value)
   )
 
 
@@ -145,7 +144,7 @@ p_case_incidence_trace <- case_forecast %>%
 
 
 
-p_hosp_incidence_trace <- ggplot(traj_plot_data %>% filter(compartment == "symptomatic", name == "transitions")) +
+p_hosp_incidence_trace <- ggplot(traj_plot_data %>% filter(compartment == "ward", name == "transitions")) +
   
   geom_step(aes(x = date, y = value)) +
   
@@ -262,7 +261,10 @@ ward_plot_data <- read_csv("data/pres_trace_ward_plot_data.csv")  %>%
   mutate(
     compartment = factor(compartment, c("symptomatic", "ward", "ICU")),
     name = factor(name, c("transitions", "count"))
-  )
+  ) %>%
+  
+  mutate(false_true_occ = if_else(compartment == "ward", false_true_occ * 4, false_true_occ),
+         false_true_occ = if_else(compartment == "ICU", false_true_occ / 2, false_true_occ))
   
 
 traj_plot_data %>%
@@ -273,12 +275,12 @@ traj_plot_data %>%
   geom_step(aes(x = date, y = value)) +
   
   geom_point(aes(x = date, y = false_true_occ),
-             ward_plot_data %>% filter(date <= ymd("2022-08-15")),
+             ward_plot_data %>% filter(date <= ymd("2022-08-09")),
              colour = "#E5F5F0" %>% shades::saturation(10),
              size = 0.8) +
   
   geom_point(aes(x = date, y = false_true_occ),
-             ward_plot_data %>% filter(date <= ymd("2022-08-15")),
+             ward_plot_data %>% filter(date <= ymd("2022-08-09")),
              pch = 1, stroke = 0.5, size = 0.8) +
   
   facet_wrap(~compartment * name, scales = "free", ncol = 2, labeller = label_wrap_gen(multi_line=FALSE)) +
@@ -318,7 +320,7 @@ ggplot() +
             ward_plot_data) +
   
   geom_point(aes(x = date, y = false_true_occ),
-             ward_plot_data %>% filter(date <= ymd("2022-08-15"))) +
+             ward_plot_data %>% filter(date <= ymd("2022-08-09"))) +
   
   facet_wrap(~compartment * name, scales = "free_y", ncol = 2, labeller = label_wrap_gen(multi_line=FALSE)) +
   
@@ -384,18 +386,18 @@ p_ward <- ggplot(forecast_quants %>% filter(group == "ward", date >= ymd("2022-0
   scale_fill_manual(values = ward_cols) +
   
   geom_point(aes(x = date, y = false_true_occ),
-             ward_plot_data %>% filter(date <= ymd("2022-08-15"), compartment == "ward")) +
+             ward_plot_data %>% filter(date <= ymd("2022-08-09"), compartment == "ward")) +
   
   geom_point(aes(x = date, y = false_true_occ),
              colour = "white", size = 0.4, stroke = 0.4,
-             ward_plot_data %>% filter(date <= ymd("2022-08-15"), compartment == "ward")) +
+             ward_plot_data %>% filter(date <= ymd("2022-08-09"), compartment == "ward")) +
   
   occ_plots_common +
   
   scale_x_date(breaks = seq(ymd("2022-06-01"), ymd("2022-09-01"), "months"),
                labels = str_c("Month ", 1:4)) +
   coord_cartesian(xlim = c(ymd("2022-06-01"), ymd("2022-09-05")),
-                  ylim = c(0, 1600))  +
+                  ylim = c(0, 3200))  +
   
   ylab(NULL)
 
@@ -403,24 +405,24 @@ p_ward <- ggplot(forecast_quants %>% filter(group == "ward", date >= ymd("2022-0
 p_ICU <- ggplot(forecast_quants %>% filter(group == "ICU", date >= ymd("2022-08-10"))) +
   
   geom_ribbon(
-    aes(x = date, ymin = lower * 4 - 15, ymax = upper * 4 - 15, fill = quant)
+    aes(x = date, ymin = lower * 2 - 15, ymax = upper * 2 - 15, fill = quant)
   ) +
   
   scale_fill_manual(values = ICU_cols) +
   
   geom_point(aes(x = date, y = false_true_occ),
-             ward_plot_data %>% filter(date <= ymd("2022-08-15"), compartment == "ICU")) +
+             ward_plot_data %>% filter(date <= ymd("2022-08-09"), compartment == "ICU")) +
   
   geom_point(aes(x = date, y = false_true_occ),
              colour = "white", size = 0.4, stroke = 0.4,
-             ward_plot_data %>% filter(date <= ymd("2022-08-15"), compartment == "ICU")) +
+             ward_plot_data %>% filter(date <= ymd("2022-08-09"), compartment == "ICU")) +
   
   occ_plots_common +
   
   scale_x_date(breaks = seq(ymd("2022-06-01"), ymd("2022-09-01"), "months"),
                labels = str_c("Month ", 1:4)) +
   coord_cartesian(xlim = c(ymd("2022-06-01"), ymd("2022-09-05")),
-                  ylim = c(0, 400))  +
+                  ylim = c(0, 220))  +
   
   ylab(NULL)
 

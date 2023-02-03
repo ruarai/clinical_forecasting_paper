@@ -1,4 +1,3 @@
-library(MASS)
 gaussprocess <- function(from = 0, to = 1, K = function(s, t) {min(s, t)},
                          start = 0, m = 1000) {
   # Simulates a Gaussian process with a given kernel
