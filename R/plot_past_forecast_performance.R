@@ -167,14 +167,21 @@ coverage <- performance_data %>%
   mutate(within = true_count >= lower & true_count <= upper) %>% 
   
   group_by(state, group, quant) %>%
-  summarise(within = sum(within) / n())
+  summarise(p_within = sum(within) / n(),
+            
+            within_lower = binom.test(sum(within), n())$conf.int[1],
+            within_upper = binom.test(sum(within), n())$conf.int[2])
+
 
 
 coverage %>%
   
   ggplot() +
   
-  geom_line(aes(x = quant, y = within, colour = group, group = group)) +
+  geom_line(aes(x = quant, y = p_within, colour = group, group = group)) +
+  geom_ribbon(aes(x = quant, ymin = within_lower, ymax = within_upper, fill = group),
+              colour = "white",
+              alpha = 0.4) +
   
   facet_wrap(~state, ncol = 4) +
   
@@ -190,6 +197,10 @@ coverage %>%
   
   scale_x_continuous(expand = expansion(mult = c(0, 0.05))) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
+  
+  scale_fill_manual(values = c("ward" = ward_base_colour, "ICU" = ICU_base_colour),
+                    labels = c("ward" = "Ward", "ICU" = "ICU"),
+                    name = NULL) +
   
   scale_colour_manual(values = c("ward" = ward_base_colour, "ICU" = ICU_base_colour),
                       labels = c("ward" = "Ward", "ICU" = "ICU"),
@@ -260,30 +271,39 @@ coverage_by_day <- performance_data %>%
   ungroup() %>%
   mutate(within = true_count >= lower & true_count <= upper) %>% 
   
-  mutate(days_ahead = floor(days_ahead / 7)) %>% 
+  #mutate(days_ahead = floor(days_ahead / 7)) %>% 
   
   group_by(days_ahead, state, group, quant) %>%
-  summarise(within = sum(within) / n())
+  summarise(p_within = sum(within) / n(),
+            
+            within_lower = binom.test(sum(within), n())$conf.int[1],
+            within_upper = binom.test(sum(within), n())$conf.int[2])
 
 
 
 coverage_by_day %>%
+  filter(quant == 0.5) %>% 
   
   ggplot() +
   
-  geom_line(aes(x = days_ahead * 7, y = within, group = interaction(quant, group), colour = group,
-                linetype = factor(quant))) +
+  geom_line(aes(x = days_ahead, y = p_within, colour = group, group = interaction(group, quant))) +
+  geom_ribbon(aes(x = days_ahead, ymin = within_lower, ymax = within_upper, fill = group, group = interaction(group, quant)),
+              colour = "white",
+              alpha = 0.4) +
   
   facet_wrap(~state, ncol = 4) +
   
   geom_hline(yintercept = 0.5) +
-  geom_hline(yintercept = 0.9,
-             linetype = 2) +
+  # geom_hline(yintercept = 0.9,
+  #            linetype = 2) +
   
   coord_cartesian(ylim = c(0, 1)) +
   
   scale_colour_manual(values = c("ward" = ward_base_colour, "ICU" = ICU_base_colour),
-                      name = c("ward" = "Ward", "ICU" = "ICU")) +
+                      labels = c("ward" = "Ward", "ICU" = "ICU")) +
+  
+  scale_fill_manual(values = c("ward" = ward_base_colour, "ICU" = ICU_base_colour),
+                    labels = c("ward" = "Ward", "ICU" = "ICU")) +
   
   
   

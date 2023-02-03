@@ -10,7 +10,7 @@ forecast_quants <- tar_read(past_forecasts_data)$quants
 
 source("../clinical_forecasting/R/read_occupancy_data.R")
 
-occupancy_data <- read_occupancy_data("../clinical_forecasting/data/occupancy/NAT_2023-01-19_Data for Uni of Melbourne.xlsx")
+occupancy_data <- read_occupancy_data("../clinical_forecasting/data/occupancy/NAT_2023-02-02_Data for Uni of Melbourne.xlsx")
 
 
 
@@ -25,7 +25,7 @@ ICU_cols <- shades::opacity(ICU_base_colour, c(0.3, 0.6, 1))
 color_list <- list("ward" = ward_cols, "ICU" = ICU_cols)
 
 
-date_min <- ymd("2022-11-29")
+date_min <- ymd("2022-12-07")
 
 forecast_subset_recent <- forecast_quants %>%
   filter(run_date >= date_min)
@@ -89,7 +89,7 @@ plot_single_forecast <- function(
     scale_x_date(labels = scales::label_date_short(c("", "%b"), sep = " "),
                  date_breaks = "months") +
 
-    coord_cartesian(xlim = c(ymd("2022-11-01"), ymd("2023-01-29")),
+    coord_cartesian(xlim = c(ymd("2022-12-01"), NA),
                     ylim = ylim) +
 
     geom_blank(aes(y = 0)) +
@@ -145,8 +145,9 @@ plots <- pmap(
 })
 
 
-cairo_pdf(str_c("results/perf/recent_forecasts_", min(forecast_trajs_recent$run_date),
-                "_to_", max(forecast_trajs_recent$run_date), ".pdf"),
+
+cairo_pdf(str_c("results/perf/recent_forecasts_", min(forecast_subset_recent$run_date),
+                "_to_", max(forecast_subset_recent$run_date), ".pdf"),
           width = 22 / 2.54, height = 22 / 2.54, onefile = TRUE)
 for (i in 1:length(plots)) {
   plot(plots[[i]])
@@ -154,16 +155,17 @@ for (i in 1:length(plots)) {
 dev.off()
 
 
-
 source("R/get_performance_data.R")
 
 
-forecast_trajs <- tar_read(past_forecasts_data)$quants
+forecast_trajs <- tar_read(past_forecasts_data)$trajs
 
 
 
 forecast_trajs_recent <- forecast_trajs %>%
-  filter(run_date >= date_min + days(7))
+  filter(run_date >= date_min)
+
+
 
 
 recent_perf <- get_performance_data(trajs = forecast_trajs_recent, occupancy_data = occupancy_data)
@@ -191,14 +193,20 @@ coverage <- recent_perf %>%
   mutate(within = true_count >= lower & true_count <= upper) %>% 
   
   group_by(state, group, quant) %>%
-  summarise(within = sum(within) / n())
+  summarise(p_within = sum(within) / n(),
+            
+            within_lower = binom.test(sum(within), n())$conf.int[1],
+            within_upper = binom.test(sum(within), n())$conf.int[2])
 
 
 coverage %>%
   
   ggplot() +
   
-  geom_line(aes(x = quant, y = within, colour = group, group = group)) +
+  geom_line(aes(x = quant, y = p_within, colour = group, group = group)) +
+  geom_ribbon(aes(x = quant, ymin = within_lower, ymax = within_upper, fill = group),
+              colour = "white",
+              alpha = 0.4) +
   
   facet_wrap(~state, ncol = 4) +
   
@@ -215,9 +223,13 @@ coverage %>%
   scale_x_continuous(expand = expansion(mult = c(0, 0.05))) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
   
+  scale_fill_manual(values = c("ward" = ward_base_colour, "ICU" = ICU_base_colour),
+                    labels = c("ward" = "Ward", "ICU" = "ICU"),
+                    name = NULL) +
+  
   scale_colour_manual(values = c("ward" = ward_base_colour, "ICU" = ICU_base_colour),
-                      labels = c("ward" = "Ward", "ICU" = "ICU"),
-                      name = NULL) +
+                     labels = c("ward" = "Ward", "ICU" = "ICU"),
+                     name = NULL) +
   
   plot_theme +
   
@@ -232,3 +244,38 @@ ggsave(
   width = 8, height = 4.5,
   bg = "white"
 )
+
+
+
+
+intervals <- recent_perf %>%
+  filter(suffix == "final") %>%
+  drop_na(true_count) %>% 
+  
+  expand_grid(
+    quant = c(0, 0.01, seq(0.05, 0.95, by = 0.05), 0.99, 1)
+  ) %>%
+  
+  rowwise() %>%
+  
+  mutate(upper = quantile(forecast_count, 0.5 + quant / 2),
+         lower = quantile(forecast_count, 0.5 - quant / 2)) %>%
+  ungroup() %>%
+  mutate(within = true_count >= lower & true_count <= upper)
+
+
+intervals %>%
+  filter(state == "VIC",
+         group == "ward",
+         quant %in% c(0.25, 0.5, 0.75, 0.9, 0.95)) %>%
+  
+  ggplot() +
+  geom_linerange(aes(x = date, ymin = lower - true_count, ymax = upper - true_count, colour = within)) +
+  
+  facet_wrap(~quant)
+
+
+
+
+
+
