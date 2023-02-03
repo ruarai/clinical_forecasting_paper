@@ -9,10 +9,6 @@ get_performance_data <- function(
   require(fabletools)
   require(distributional)
   
-  trajs <- tar_read(all_forecasts_data)$trajs
-  occupancy_data <- tar_read(occupancy_data)
-  
-  
   occupancy_timeseries <- occupancy_data %>%
     filter(date >= ymd("2021-06-01"),
            #date <= ymd("2022-09-09")
