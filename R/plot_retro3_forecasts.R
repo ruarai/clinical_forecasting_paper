@@ -1,15 +1,20 @@
 
 
-performance_data_retro3 <- performance_data %>%
+library(targets)
+library(tidyverse)
+library(lubridate)
+library(distributional)
+
+performance_data_retro3 <- tar_read(performance_data) %>%
   filter(str_starts(suffix, "retro3"),
          days_ahead >= 13,
          run_date <= ymd("2022-08-10"))
 
 suffix_labels <- c(
-  "retro3_neither" = "Future case incidence and time-varying probabilities predicted",
-  "retro3_knowntv" = "Future time-varying probabilities known exactly",
-  "retro3_knowncases" = "Future case incidence known exactly",
-  "retro3_knownboth" = "Future case incidence and time-varying probabilities known exactly"
+  "retro3_neither" = "Baseline",
+  "retro3_knowntv" = "Future time-varying probabilities\nknown exactly",
+  "retro3_knowncases" = "Future case incidence\nknown exactly",
+  "retro3_knownboth" = "Future case incidence and time-varying\nprobabilities known exactly"
 )
 
 perf_scores_retro3 <- performance_data_retro3 %>%
@@ -21,16 +26,34 @@ perf_scores_retro3 <- performance_data_retro3 %>%
     mean_error = mean(AE_forecast)
   ) %>%
   
-  mutate(relative_error = mean_error / mean_error[suffix == "retro3_neither"]) %>%
-  
-  select(suffix, mean_error, relative_error) %>%
-  
   mutate(
-    label = str_c("Mean absolute error: ", round(mean_error, 0), " (", round(relative_error, 2), "x)"),
     suffix_label = suffix_labels[suffix],
     suffix_label = factor(suffix_label, suffix_labels)
   )
 
+
+# Add uncertainty
+
+perf_scores_retro3 %>%
+  mutate(suffix_label = fct_rev(suffix_label)) %>% 
+  ggplot() +
+  
+  geom_vline(xintercept = perf_scores_retro3 %>% filter(suffix == "retro3_neither") %>% pull(mean_error),
+             linetype = "dashed", alpha = 0.5) +
+  
+  geom_linerange(aes(xmin = 0, xmax = mean_error, y = suffix_label),
+                 size = 4) +
+  
+  coord_cartesian(xlim = c(0, NA)) +
+  
+  xlab("Mean absolute error (MAE)") +
+  ylab(NULL) +
+  
+  scale_x_continuous(expand = expansion(mult = c(0, 0.15))) +
+  
+  plot_theme +
+  
+  ggtitle("Performance \u2012 known and unknown future components")
   
   
   
@@ -64,14 +87,6 @@ forecast_quants %>%
   geom_line(aes(x = date, y = median, 
                 group = interaction(case_forecast_start, suffix)),
             colour = ward_base_colour) +
-  
-  geom_label(
-    aes(x = ymd("2022-03-01") - days(1), y = 3010, label = label),
-    
-    hjust = 0, vjust = 1, label.r = unit(0, "cm"),
-    label.size = 0.1, size = 3.4,
-    perf_scores_retro3
-  ) +
   
   scale_x_date(date_breaks = "months",
                labels = scales::label_date_short()) +

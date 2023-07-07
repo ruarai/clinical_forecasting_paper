@@ -43,7 +43,7 @@ forecast_quants <- forecast_trajs %>%
   make_results_quants()
 
 
-date_range <- c(ymd("2022-05-01"), ymd("2022-07-26"))
+date_range <- c(ymd("2022-06-01"), ymd("2022-07-26"))
 
 known_cases <- local_cases %>%
   filter(state == "VIC", date_onset <= date_range[2])
@@ -55,7 +55,7 @@ known_occupancy <- occupancy_data %>%
 forecast_text_size <- 4
 
 occ_plots_common <- list(
-  geom_vline(xintercept = case_forecast_start + days(1), linetype = "dotdash", alpha = 0.8),
+  #geom_vline(xintercept = case_forecast_start + days(1), linetype = "dotdash", alpha = 0.8),
   xlab(NULL), ylab(NULL),
   scale_y_continuous(breaks = scales::breaks_extended(3),
                      labels = scales::label_comma(),
@@ -71,23 +71,24 @@ p_cases <- ggplot() +
     case_quants
   ) +
   
-  geom_point(
-    aes(x = date_onset, y = count),
-    known_cases,
-    size = 0.6, stroke = 0, colour = "white"
-  ) +
-  
-  geom_point(
-    aes(x = date_onset, y = count),
-    known_cases,
-    pch = 1, size = 0.6, stroke = 0.6
-  ) +
+  # geom_point(
+  #   aes(x = date_onset, y = count),
+  #   known_cases,
+  #   size = 0.6, stroke = 0, colour = "white"
+  # ) +
+  # 
+  # geom_point(
+  #   aes(x = date_onset, y = count),
+  #   known_cases,
+  #   pch = 1, size = 0.6, stroke = 0.6
+  # ) +
   
   geom_point(
     aes(x = date_onset, y = count),
     known_cases %>% filter(date_onset < ymd("2022-06-30")),
-    size = 0.6, stroke = 0, colour = "black"
-  ) +
+    size = 0.6, stroke = 0.3, colour = "black"
+  ) + 
+  geom_vline(xintercept = case_forecast_start + days(1), linetype = "dashed", alpha = 0.8) +
   
   # annotate(
   #   geom = "label", x = ymd("2022-05-01"), y = 23000, label = "Input case forecast",
@@ -109,25 +110,25 @@ p_ward <- ggplot() +
   geom_ribbon(
     aes(x = date, ymin = lower, ymax = upper, fill = quant),
     forecast_quants %>%
-      filter(group == "ward")
+      filter(group == "ward", date >= ymd("2022-07-05"))
   ) +
+  
+  # geom_point(
+  #   aes(x = date, y = count),
+  #   known_occupancy %>% filter(group == "ward"),
+  #   size = 0.6, stroke = 0, colour = "white"
+  # ) +
+  # 
+  # geom_point(
+  #   aes(x = date, y = count),
+  #   known_occupancy %>% filter(group == "ward"),
+  #   pch = 1, size = 0.6, stroke = 0.6
+  # ) +
   
   geom_point(
     aes(x = date, y = count),
-    known_occupancy %>% filter(group == "ward"),
-    size = 0.6, stroke = 0, colour = "white"
-  ) +
-  
-  geom_point(
-    aes(x = date, y = count),
-    known_occupancy %>% filter(group == "ward"),
-    pch = 1, size = 0.6, stroke = 0.6
-  ) +
-  
-  geom_point(
-    aes(x = date, y = count),
-    known_occupancy %>% filter(group == "ward", date < ymd("2022-07-08")),
-    size = 0.6, stroke = 0, colour = "black"
+    known_occupancy %>% filter(group == "ward", date < ymd("2022-07-06")),
+    size = 0.6, stroke = 0.3, colour = "black"
   )  +
   
   # annotate(
@@ -149,25 +150,25 @@ p_ICU <- ggplot() +
   geom_ribbon(
     aes(x = date, ymin = lower, ymax = upper, fill = quant),
     forecast_quants %>%
-      filter(group == "ICU")
+      filter(group == "ICU", date >= ymd("2022-07-05"))
   ) +
   
+  # geom_point(
+  #   aes(x = date, y = count),
+  #   known_occupancy %>% filter(group == "ICU"),
+  #   size = 0.6, stroke = 0, colour = "white"
+  # ) +
+  # 
+  # geom_point(
+  #   aes(x = date, y = count),
+  #   known_occupancy %>% filter(group == "ICU"),
+  #   pch = 1, size = 0.6, stroke = 0.6
+  # ) +
+  # 
   geom_point(
     aes(x = date, y = count),
-    known_occupancy %>% filter(group == "ICU"),
-    size = 0.6, stroke = 0, colour = "white"
-  ) +
-  
-  geom_point(
-    aes(x = date, y = count),
-    known_occupancy %>% filter(group == "ICU"),
-    pch = 1, size = 0.6, stroke = 0.6
-  ) +
-  
-  geom_point(
-    aes(x = date, y = count),
-    known_occupancy %>% filter(group == "ICU", date < ymd("2022-07-08")),
-    size = 0.6, stroke = 0, colour = "black"
+    known_occupancy %>% filter(group == "ICU", date < ymd("2022-07-06")),
+    size = 0.6, stroke = 0.3, colour = "black"
   ) +
   
   # annotate(
@@ -185,6 +186,7 @@ p_ICU <- ggplot() +
   ylab("ICU beds")
 
 
+p_ICU
 
 cowplot::plot_grid(
   p_cases, p_ward, p_ICU,
@@ -358,13 +360,36 @@ p_together_labelled <- p_together +
 
 p_together_labelled
 
-ggsave(
-  "results/example_forecast.pdf",
-  plot = p_together_labelled,
-  width = 12,
-  height = 6,
-  bg = "white"
+# ggsave(
+#   "results/example_forecast.pdf",
+#   plot = p_together_labelled,
+#   width = 12,
+#   height = 6,
+#   bg = "white"
+# )
+# 
+
+
+
+extra_theme <- list(
+  theme(panel.grid.major = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        axis.line = element_line(colour = "black")),
+  ylab(NULL),
+  xlab(NULL)
+)
+
+cowplot::plot_grid(
+  p_cases + extra_theme, p_ward + extra_theme, p_ICU + extra_theme,
+  ncol = 1,
+  align = "v", axis = "lr"
 )
 
 
+ggsave(
+  "results/diagram_forecasts.pdf",
+  width = 2.5,
+  height = 3
+)
 

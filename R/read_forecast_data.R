@@ -41,6 +41,7 @@ read_forecast_data <- function(forecast_meta) {
     traj_wide <- traj_tbl %>%
       mutate(id = name) %>%
       select(c(id, state, group, sample, count, date)) %>%
+      filter(sample < 2000) %>% 
       pivot_wider(names_from = "sample",
                   names_prefix = "sim_",
                   values_from = "count") %>%

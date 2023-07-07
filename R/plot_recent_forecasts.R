@@ -10,7 +10,7 @@ forecast_quants <- tar_read(past_forecasts_data)$quants
 
 source("../clinical_forecasting/R/read_occupancy_data.R")
 
-occupancy_data <- read_occupancy_data("../clinical_forecasting/data/occupancy/NAT_2023-02-02_Data for Uni of Melbourne.xlsx")
+occupancy_data <- read_occupancy_data("../clinical_forecasting/data/occupancy/NAT_2023-02-23_Data for Uni of Melbourne.xlsx")
 
 
 
@@ -25,7 +25,7 @@ ICU_cols <- shades::opacity(ICU_base_colour, c(0.3, 0.6, 1))
 color_list <- list("ward" = ward_cols, "ICU" = ICU_cols)
 
 
-date_min <- ymd("2022-12-07")
+date_min <- ymd("2023-01-01")
 
 forecast_subset_recent <- forecast_quants %>%
   filter(run_date >= date_min)
@@ -89,7 +89,7 @@ plot_single_forecast <- function(
     scale_x_date(labels = scales::label_date_short(c("", "%b"), sep = " "),
                  date_breaks = "months") +
 
-    coord_cartesian(xlim = c(ymd("2022-12-01"), NA),
+    coord_cartesian(xlim = c(date_min, NA),
                     ylim = ylim) +
 
     geom_blank(aes(y = 0)) +

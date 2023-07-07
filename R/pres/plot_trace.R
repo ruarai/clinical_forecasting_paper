@@ -34,15 +34,6 @@ traj_plot_data <- sim_results$trajectories_ungrouped %>%
 
 
 
-ggsave(
-  "results/pres/trace.png",
-  width = 6,
-  height = 4,
-  bg = "white"
-)
-
-
-
 
 case_forecast <- read_csv("~/source/clinical_forecasting/results/fc_2022-08-17_final/archive/ensemble.csv")
 
@@ -263,7 +254,7 @@ ward_plot_data <- read_csv("data/pres_trace_ward_plot_data.csv")  %>%
     name = factor(name, c("transitions", "count"))
   ) %>%
   
-  mutate(false_true_occ = if_else(compartment == "ward", false_true_occ * 4, false_true_occ),
+  mutate(false_true_occ = if_else(compartment == "ward", false_true_occ * 2.1, false_true_occ),
          false_true_occ = if_else(compartment == "ICU", false_true_occ / 2, false_true_occ))
   
 
@@ -380,7 +371,7 @@ forecast_quants <- sim_results$trajectories %>%
 p_ward <- ggplot(forecast_quants %>% filter(group == "ward", date >= ymd("2022-08-10"))) +
   
   geom_ribbon(
-    aes(x = date, ymin = lower * 0.6 , ymax = upper * 0.6, fill = quant)
+    aes(x = date, ymin = lower * 1.3, ymax = upper * 1.3, fill = quant)
   ) +
   
   scale_fill_manual(values = ward_cols) +
@@ -397,7 +388,7 @@ p_ward <- ggplot(forecast_quants %>% filter(group == "ward", date >= ymd("2022-0
   scale_x_date(breaks = seq(ymd("2022-06-01"), ymd("2022-09-01"), "months"),
                labels = str_c("Month ", 1:4)) +
   coord_cartesian(xlim = c(ymd("2022-06-01"), ymd("2022-09-05")),
-                  ylim = c(0, 3200))  +
+                  ylim = c(0, 3500))  +
   
   ylab(NULL)
 

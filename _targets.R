@@ -39,28 +39,61 @@ list(
   ),
   
   tar_target(
-    occupancy_data,
-    #get_occupancy_data()
-    read_csv("~/source/clinical_forecasting/data/occupancy/compiled/occupancy_compiled_2023-01-12.csv", show_col_types = FALSE)
+    paper_forecasts_data,
+    list(
+      "quants" = past_forecasts_data$quants %>% 
+        filter(run_date < ymd("2022-08-10"),
+               run_date >= ymd("2022-03-15"),
+               suffix == "final"),
+      "trajs" = past_forecasts_data$trajs %>% 
+        filter(run_date < ymd("2022-08-10"),
+               run_date >= ymd("2022-03-15"),
+               suffix == "final")
+    ),
+    format = "qs"
   ),
   
   tar_target(
-    past_forecast_plots,
-    
-    plot_forecasts(
-      past_forecasts_data$quants,
-      occupancy_data
-    ) %>%
-      plot_supplementary_all_forecasts()
+    occupancy_data,
+    read_csv("data/occupancy_compiled_Sep2022.csv", show_col_types = FALSE)
   ),
   
+  tar_target(
+    occupancy_data_total,
+    read_csv("../clinical_forecasting/data/occupancy/compiled/occupancy_compiled_2023-05-26.csv")
+  ),
+
   
   tar_target(
     performance_data,
     
     get_performance_data(
-      all_forecast_data$trajs,
+      all_forecasts_data$trajs,
+      occupancy_data_total
+    ),
+    
+    format = "qs"
+  ),
+  
+  
+  tar_target(
+    paper_performance_data,
+    
+    get_performance_data(
+      paper_forecasts_data$trajs,
       occupancy_data
+    ),
+    
+    format = "qs"
+  ),
+  
+  
+  tar_target(
+    retro_performance_data,
+    
+    get_performance_data(
+      retro_forecasts_data$trajs,
+      occupancy_data_total
     ),
     
     format = "qs"

@@ -81,7 +81,7 @@ plot_single_forecast <- function(
     scale_x_date(labels = scales::label_date_short(c("%Y", "%b"), sep = " "),
                  date_breaks = "months") +
     
-    coord_cartesian(xlim = c(ymd("2022-02-01"), ymd("2022-10-25")),
+    coord_cartesian(xlim = c(ymd("2022-03-01"), ymd("2022-09-01")),
                     ylim = ylim) +
     
     geom_blank(aes(y = 0)) +
