@@ -22,7 +22,7 @@ read_retro_forecasts <- function() {
                  "2023-02-23", "2023-03-03", "2023-03-09", "2023-03-17", "2023-03-23",
                  "2023-03-31", "2023-04-06", "2023-04-14", "2023-04-20", "2023-04-27", 
                  "2023-05-05", "2023-05-12", "2023-05-19"),
-    suffix = c("test_pf6")
+    suffix = c("test_pf_b_1", "test_pf_b_baseline")
   ) %>%
     mutate(#input_dir = str_c("../clinical_forecasting/historical_inputs/", run_date),
       input_dir = str_c("../clinical_forecasting/results/fc_", run_date, "_final/archive"),

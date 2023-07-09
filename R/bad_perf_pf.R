@@ -6,33 +6,19 @@ library(lubridate)
 
 source("R/plots_common.R")
 
-forecast_quants_retro <- tar_read(retro_forecasts_data)$quants %>%
-  filter(suffix == "test_pf6")
-forecast_quants_final <- tar_read(all_forecasts_data)$quants %>%
-  filter(suffix == "final")
+forecast_quants_retro <- tar_read(retro_forecasts_data)$quants
 occupancy_data <- tar_read(occupancy_data_total)
 
 
-performance_data_retro <- tar_read(retro_performance_data) %>%
-  filter(suffix == "test_pf6")
-performance_data_final <- tar_read(performance_data) %>%
-  filter(suffix == "final")
+performance_data_retro <- tar_read(retro_performance_data)
 
-
-performance_data_comp <- performance_data_final %>%
-  filter(run_date %in% performance_data_retro$run_date)
-
-
-plot_data_perf <- bind_rows(
-  performance_data_retro, performance_data_comp
-)
 
 
 get_performance <- . %>% 
   
   summarise(
     #CRPS_naive = median(z_log_CRPS_naive),
-    CRPS_forecast = median(z_log_CRPS_forecast),
+    CRPS_forecast = mean(z_log_CRPS_forecast),
     
     #MAE_naive = mean(AE_naive),
     MAE_forecast = mean(AE_forecast),
@@ -41,7 +27,8 @@ get_performance <- . %>%
   )
 
 
-plot_data_perf %>%
+performance_data_retro %>%
+  filter(date >= ymd("2023-03-01")) %>% 
   group_by(state, group, suffix) %>%
   get_performance() %>%
   
@@ -54,7 +41,21 @@ plot_data_perf %>%
   facet_wrap(~group)
 
 
-plot_data_perf %>%
+performance_data_retro %>%
+  filter(group == "ward") %>% 
+  group_by(state, group, days_ahead, suffix) %>%
+  get_performance() %>%
+  
+  ggplot() +
+  geom_line(aes(x = days_ahead, y = MAE_forecast, colour = suffix),
+            position = position_dodge()) +
+  
+  plot_theme +
+  
+  facet_wrap(~state, scales = "free_y")
+
+
+performance_data_retro %>%
   group_by(state, group, suffix) %>%
   get_performance() %>%
   
@@ -69,10 +70,10 @@ plot_data_perf %>%
 ggplot() +
   ggdist::stat_dots(aes(x = state, y = z_log_CRPS_forecast, colour = suffix),
                     side = "right",
-                    plot_data_perf %>% filter(suffix == "final")) +
+                    performance_data_retro %>% filter(suffix == "test_pf_b_1")) +
   ggdist::stat_dots(aes(x = state, y = z_log_CRPS_forecast, colour = suffix),
                     side = "left",
-                    plot_data_perf %>% filter(suffix == "test_pf6")) +
+                    performance_data_retro %>% filter(suffix == "test_pf_b_baseline")) +
   
   facet_wrap(~group) +
   
@@ -80,16 +81,9 @@ ggplot() +
   
   plot_theme
 
-plot_data_quants_final <- forecast_quants_final %>%
-  filter(run_date %in% forecast_quants_retro$run_date)
 
 
-
-
-
-plot_data <- bind_rows(
-  forecast_quants_retro, plot_data_quants_final
-) %>%
+plot_data <- forecast_quants_retro %>%
   filter(quant == 50 | quant == 90)
 
 date_range <- c(ymd("2022-11-15"), ymd("2023-06-01"))
@@ -128,9 +122,7 @@ p_common <- list(
 )
 
 
-performance_data_plot <- bind_rows(
-  performance_data_retro, performance_data_comp
-) %>%
+performance_data_plot <- performance_data_retro %>%
   mutate(run_date = ymd(run_date)) %>% 
   
   left_join(
@@ -167,7 +159,7 @@ plot_meta <- tribble(
   "ACT", "ICU", 35, 30, 29
   
 ) %>%
-  expand_grid(i_suffix = c("final", "test_pf6"))
+  expand_grid(i_suffix = c("test_pf_b_1", "test_pf_b_baseline"))
 
 asterisk_runs <- plot_meta %>%
   right_join(
@@ -297,7 +289,7 @@ plots_ordered <- plots[order(plot_meta$i_state)]
 
 
 
-cairo_pdf("results/perf_pf_2023_6.pdf",
+cairo_pdf("results/perf_pf_2023_b_1.pdf",
           width = 8.5, height = 9, onefile = TRUE)
 for (i in 1:length(plots_ordered)) {
   plot(plots_ordered[[i]])
