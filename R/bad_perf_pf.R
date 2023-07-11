@@ -12,15 +12,36 @@ occupancy_data <- tar_read(occupancy_data_total)
 
 performance_data_retro <- tar_read(retro_performance_data)
 
+performance_data_retro %>%
+  filter(date >= ymd("2023-03-01"), days_ahead > 14) %>% 
+  select(suffix, state, group, run_date, case_forecast_start, date, metric = z_CRPS_forecast) %>%
+  pivot_wider(names_from = suffix, values_from = metric) %>% 
+  rename(
+    baseline = test_pf_b_baseline,
+    experimental = test_pf_b_2
+  ) %>% 
+  
+  group_by(run_date, group, state) %>%
+  summarise(baseline = mean(baseline), experimental = mean(experimental)) %>%
+  
+  mutate(skill_score = (baseline - experimental) / baseline) %>% 
+  group_by(group, state) %>%
+  summarise(p_better = sum(skill_score > 0) / n()) %>% 
+  
+  ggplot() +
+  geom_point(aes(x = p_better, y = group)) +
+  
+  geom_vline(xintercept = 0.5) +
+  
+  facet_wrap(~state) +
+  
+  coord_cartesian(xlim = c(0, 1))
 
 
 get_performance <- . %>% 
   
   summarise(
-    #CRPS_naive = median(z_log_CRPS_naive),
     CRPS_forecast = mean(z_log_CRPS_forecast),
-    
-    #MAE_naive = mean(AE_naive),
     MAE_forecast = mean(AE_forecast),
     
     .groups = "drop"
@@ -47,12 +68,12 @@ performance_data_retro %>%
   get_performance() %>%
   
   ggplot() +
-  geom_line(aes(x = days_ahead, y = MAE_forecast, colour = suffix),
+  geom_line(aes(x = days_ahead, y = CRPS_forecast, colour = suffix),
             position = position_dodge()) +
   
   plot_theme +
   
-  facet_wrap(~state, scales = "free_y")
+  facet_wrap(~state)
 
 
 performance_data_retro %>%
@@ -159,7 +180,7 @@ plot_meta <- tribble(
   "ACT", "ICU", 35, 30, 29
   
 ) %>%
-  expand_grid(i_suffix = c("test_pf_b_1", "test_pf_b_baseline"))
+  expand_grid(i_suffix = c("test_pf_b_2", "test_pf_b_baseline"))
 
 asterisk_runs <- plot_meta %>%
   right_join(
@@ -289,7 +310,7 @@ plots_ordered <- plots[order(plot_meta$i_state)]
 
 
 
-cairo_pdf("results/perf_pf_2023_b_1.pdf",
+cairo_pdf("results/perf_pf_2023_b_2.pdf",
           width = 8.5, height = 9, onefile = TRUE)
 for (i in 1:length(plots_ordered)) {
   plot(plots_ordered[[i]])
