@@ -6,11 +6,13 @@ library(lubridate)
 
 source("R/plots_common.R")
 
-forecast_quants_retro <- tar_read(retro_forecasts_data)$quants
+forecast_quants_retro <- tar_read(retro_forecasts_data)$quants %>%
+  filter(state %in% c("NT", "TAS", "ACT"))
 occupancy_data <- tar_read(occupancy_data_total)
 
 
-performance_data_retro <- tar_read(retro_performance_data)
+performance_data_retro <- tar_read(retro_performance_data) %>%
+  filter(state %in% c("NT", "TAS", "ACT"))
 
 performance_data_retro %>%
   filter(date >= ymd("2023-03-01"), days_ahead > 14) %>% 
@@ -18,7 +20,7 @@ performance_data_retro %>%
   pivot_wider(names_from = suffix, values_from = metric) %>% 
   rename(
     baseline = test_pf_b_baseline,
-    experimental = test_pf_b_2
+    experimental = test_pf_b_3
   ) %>% 
   
   group_by(run_date, group, state) %>%
@@ -88,21 +90,6 @@ performance_data_retro %>%
   
   facet_wrap(~group, scales = "free")
 
-ggplot() +
-  ggdist::stat_dots(aes(x = state, y = z_log_CRPS_forecast, colour = suffix),
-                    side = "right",
-                    performance_data_retro %>% filter(suffix == "test_pf_b_1")) +
-  ggdist::stat_dots(aes(x = state, y = z_log_CRPS_forecast, colour = suffix),
-                    side = "left",
-                    performance_data_retro %>% filter(suffix == "test_pf_b_baseline")) +
-  
-  facet_wrap(~group) +
-  
-  coord_cartesian(ylim = c(0, 2)) +
-  
-  plot_theme
-
-
 
 plot_data <- forecast_quants_retro %>%
   filter(quant == 50 | quant == 90)
@@ -155,23 +142,23 @@ color_list <- list("ward" = ward_base_colour, "ICU" = ICU_base_colour)
 
 plot_meta <- tribble(
   ~i_state, ~i_group, ~y_upper, ~y_label, ~y_label_asterisk,
-  "NSW", "ward", 3400, 3280, 3180,
-  "NSW", "ICU", 150, 140, 136,
-  
-  "SA", "ward", 650, 640, 620,
-  "SA", "ICU", 45, 40, 39,
-  
-  "VIC", "ward", 1400, 1350, 1300,
-  "VIC", "ICU", 150, 140, 135,
+  # "NSW", "ward", 3400, 3280, 3180,
+  # "NSW", "ICU", 150, 140, 136,
+  # 
+  # "SA", "ward", 650, 640, 620,
+  # "SA", "ICU", 45, 40, 39,
+  # 
+  # "VIC", "ward", 1400, 1350, 1300,
+  # "VIC", "ICU", 150, 140, 135,
   
   "NT", "ward", 150, 140, 135,
   "NT", "ICU", 25, 20, 17,
-  
-  "WA", "ward", 1200, 1100, 1050,
-  "WA", "ICU", 45, 40, 39,
-  
-  "QLD", "ward", 1800, 1750, 1700,
-  "QLD", "ICU", 60, 55, 54,
+  # 
+  # "WA", "ward", 1200, 1100, 1050,
+  # "WA", "ICU", 45, 40, 39,
+  # 
+  # "QLD", "ward", 1800, 1750, 1700,
+  # "QLD", "ICU", 60, 55, 54,
   
   "TAS", "ward", 280, 270, 265,
   "TAS", "ICU", 25, 20, 19,
@@ -180,7 +167,7 @@ plot_meta <- tribble(
   "ACT", "ICU", 35, 30, 29
   
 ) %>%
-  expand_grid(i_suffix = c("test_pf_b_2", "test_pf_b_baseline"))
+  expand_grid(i_suffix = c("test_pf_b_3", "test_pf_b_baseline"))
 
 asterisk_runs <- plot_meta %>%
   right_join(
@@ -310,7 +297,7 @@ plots_ordered <- plots[order(plot_meta$i_state)]
 
 
 
-cairo_pdf("results/perf_pf_2023_b_2.pdf",
+cairo_pdf("results/perf_pf_2023_b_3.pdf",
           width = 8.5, height = 9, onefile = TRUE)
 for (i in 1:length(plots_ordered)) {
   plot(plots_ordered[[i]])
