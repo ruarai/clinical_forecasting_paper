@@ -5,7 +5,7 @@ retro_trajs <- tar_read(retro_forecasts_data)$trajs %>%
   mutate(run_date = ymd(run_date))
 
 
-forecast_trajs_long <- bind_rows(forecast_trajs, retro_trajs) %>%
+forecast_trajs_long <- retro_trajs %>%
   pivot_longer(starts_with("sim_"),
                names_to = "sim", names_prefix = "sim_",
                values_to = "count_sim") %>%
@@ -49,22 +49,27 @@ empirical_coverage <- forecast_quantiles %>%
   group_by(state, group, suffix, prob) %>%
   summarise(n_within = sum(weight))
 
-plot_data <- empirical_coverage %>% 
-  mutate(group = factor(group, levels = c("ward", "ICU"), labels = c("Ward", "ICU")),
-         rate = seq(-10, -6, by = 0.5)[as.numeric(suffix)]) %>%
-  mutate(rate = round(exp(rate) * 10000, 2),
-         rate = replace_na(rate, 0)) %>%
-  
-  filter(state %in% c("TAS", "NT", "ACT")) 
 
+clean_for_plots <- . %>%
+  mutate(group = factor(group,
+                        c("ward", "ICU"),
+                        labels = c("Ward", "ICU")),
+         suffix = factor(suffix,
+                         c("test_pf_b_baseline", "test_abc_2"),
+                         c("Old model", "New model")))
+
+plot_data <- empirical_coverage %>%
+  
+  clean_for_plots()
 plot_data_ext <- plot_data %>%
   bind_rows(plot_data %>% 
               filter(prob == max(prob)) %>%
               mutate(prob = prob + step_size)) 
 
 
+
 group_lines <- plot_data %>% 
-  group_by(state, rate, group) %>% 
+  group_by(state, suffix, group) %>% 
   summarise(n = sum(n_within) * step_size)
 
 plot_group <- function(i_group) {
@@ -72,8 +77,8 @@ plot_group <- function(i_group) {
     filter(group == i_group) %>% 
     ggplot() +
     
-    geom_step(aes(x = prob, y = n_within),
-              size = 1, colour = "grey40") +
+    geom_step(aes(x = prob, y = n_within, group = suffix, colour = suffix),
+              size = 1) +
     
     geom_hline(aes(yintercept = n),
                group_lines %>% filter(group == i_group),
@@ -94,35 +99,34 @@ plot_group <- function(i_group) {
     coord_cartesian(xlim = c(0, 1)) +
     
     plot_theme +
-    theme(legend.position = "none",
+    theme(legend.position = "bottom",
           panel.spacing.x = unit(1, "cm"))
 }
 
+
+
 plot_group("Ward") + ggtitle("Ward") +
   
-  facet_grid(rows = vars(rate), cols = vars(state))
+  facet_wrap(~state, ncol = 2)
+
+plot_group("ICU") + ggtitle("ICU") +
+  
+  facet_wrap(~state, ncol = 2)
 
 
 plot_data_summ <- plot_data %>%
   left_join(group_lines) %>% 
-  filter(group == "Ward") %>% 
-  group_by(state, group, rate) %>% 
+  filter(group == "ward") %>% 
+  group_by(state, group, suffix) %>% 
   summarise(err = sum(abs(n_within - n)))
 
 plot_data_summ %>%
-  filter(rate > 0) %>% 
   
   ggplot() +
-  geom_line(aes(x = rate, y = err)) +
-  geom_hline(aes(yintercept = err),
-             linetype = "44",
-             plot_data_summ %>%
-               filter(rate == 0)) +
-  geom_point(aes(x = rate, y = err)) +
   
-  facet_wrap(~state, scales = "free_y") +
+  geom_path(aes(y = suffix, x = err, colour = state, group = state)) +
   
-  coord_cartesian(ylim = c(0, 300)) +
+  coord_cartesian(xlim = c(0, 400)) +
   
   xlab("Importation risk") +
   ylab("Calibration error") +

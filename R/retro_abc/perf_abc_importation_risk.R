@@ -1,6 +1,6 @@
 
 source("../clinical_forecasting/R/make_result_quants.R")
-
+source("R/plots_common.R")
 
 forecast_meta <- expand_grid(
   run_date = c("2022-03-18", "2022-03-11", "2022-02-25", "2022-02-22", "2022-02-18",
@@ -78,14 +78,79 @@ source("R/get_performance_data.R")
 
 performance_data <- get_performance_data(forecast_trajs, tar_read(occupancy_data_total))
 
-retro_perf <- tar_read(retro_performance_data) %>%
-  filter(suffix == "test_pf_b_baseline", state %in% c("TAS", "ACT", "NT")) %>%
-  mutate(run_date = ymd(run_date))
+retro_perf <- bind_rows(
+  read_rds("data/retro_perf_data_baseline.rds"),
+  read_rds("data/retro_perf_data_b_1.rds"),
+  read_rds("data/retro_perf_data_b_2.rds")
+) %>%
+  mutate(run_date = ymd(run_date)) %>%
+  filter(run_date %in% forecast_trajs$run_date) %>%
+  
+  mutate(
+    name = case_when(
+      suffix == "test_pf_b_baseline" ~ "Baseline (old model)",
+      suffix == "test_pf_b_1" ~ "PF model - with blipper",
+      suffix == "test_pf_b_2" ~ "PF model - without blipper"
+    )
+  ) %>%
+  mutate(name = factor(
+    name, 
+    levels = c("Baseline (old model)", "PF model - without blipper", "PF model - with blipper")
+  ) %>% fct_rev())
 
-performance_data_with_old <- bind_rows(performance_data, retro_perf) %>% 
+retro_perf_mean <- retro_perf %>%
+  filter(group == "ward") %>% 
+  group_by(state, group, name) %>%
+  summarise(error = mean(z_log_CRPS_forecast))
+
+
+ggplot() +
+  geom_point(aes(y = name, x = error),
+             retro_perf_mean) +
+  
+  geom_vline(aes(xintercept = error),
+             linetype = "44",
+             retro_perf_mean %>% filter(name == "Baseline (old model)")) +
+  
+  facet_wrap(~state, scales = "free_y", ncol = 2) +
+  
+  coord_cartesian(xlim = c(0, NA)) +
+  
+  ylab(NULL) +
+  xlab("CRPS") +
+  
+  plot_theme
+
+
+performance_data_with_old <- retro_perf %>%
+  filter(suffix == "test_pf_b_baseline") %>%
+  bind_rows(performance_data) %>% 
   mutate(rate = seq(-10, -6, by = 0.5)[as.numeric(suffix)]) %>%
   mutate(rate = round(exp(rate) * 10000, 2),
          rate = replace_na(rate, 0))
+
+
+performance_data_with_old %>% 
+  filter(state %in% c("TAS", "ACT", "NT")) %>%
+  filter(rate > 0) %>% 
+  filter(group == "ward") %>% 
+  group_by(state, group, rate) %>%
+  summarise(error = mean(z_log_CRPS_forecast)) %>% 
+  ggplot() +
+  geom_point(aes(x = rate, y = error))  +
+  geom_line(aes(x = rate, y = error)) +
+  
+  geom_hline(aes(yintercept = error),
+             linetype = "44",
+             retro_perf_mean %>% filter(name == "Baseline (old model)") %>% filter(state %in% c("NT", "TAS", "ACT"))) +
+  
+  facet_wrap(~state, scales = "free_y") +
+  
+  xlab("Importation risk (importations per 10,000 cases)") +
+  ylab("CRPS") +
+  
+  plot_theme
+
 
 performance_data_with_old %>%
   filter(group == "ward") %>% 

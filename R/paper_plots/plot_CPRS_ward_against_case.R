@@ -200,12 +200,10 @@ case_performance %>%
   
   drop_na(log_CRPS_ward) %>%
   
-  group_by(state, case_forecast_start, date, days_ahead) %>% 
+  group_by(state, case_forecast_start) %>% 
   summarise(log_CRPS_ward = mean(log_CRPS_ward),
             log_CRPS_case = mean(log_CRPS_case),
-            x = log_CRPS_ward - log_CRPS_case,
-            x = pmin(x, x_limit),
-            x = pmax(x, -x_limit),
+            x = atan(log_CRPS_ward / log_CRPS_case),
             .groups = "drop") %>% 
   ungroup() %>%
   mutate(label = match(case_forecast_start, unique(case_forecast_start))) %>% 
@@ -221,7 +219,7 @@ case_performance %>%
   geom_hline(yintercept = 0, size = 0.8) +
   geom_vline(xintercept = 0, size = 0.8) +
   
-  geom_point(aes(x = log_CRPS_case, y = log_CRPS_ward, group = case_forecast_start, colour = days_ahead),
+  geom_point(aes(x = log_CRPS_case, y = log_CRPS_ward, group = case_forecast_start, colour = x),
              size = 0.4, stroke = 0.3) +
   
   #geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
@@ -230,7 +228,7 @@ case_performance %>%
   
   facet_wrap(~state, ncol = 2) +
   
-  coord_fixed(xlim = c(0, 1.0), ylim = c(0, 1.0), expand = FALSE) +
+  coord_fixed(xlim = c(0, 0.7), ylim = c(0, 0.7), expand = FALSE) +
   
   scale_x_continuous(breaks = c(0, 0.5, 1.0)) +
   scale_y_continuous(breaks = c(0, 0.5, 1.0)) +
@@ -247,21 +245,80 @@ case_performance %>%
   ggtitle("A")
 
 
-
-
-
-fit_data <- case_performance %>%
+plot_data <- case_performance %>%
   select(state, date, case_forecast_start, log_CRPS_case = z_log_CRPS_forecast) %>% 
   
+  #filter(state == "VIC") %>% 
+  
   left_join(
-    performance_data %>%
+    perf_bias %>%
       filter(group == "ward") %>%
-      select(state, group, case_forecast_start, date, days_ahead, log_CRPS_ward = z_log_CRPS_forecast),
+      select(state, group, case_forecast_start, date, true_count, days_ahead, log_CRPS_ward = z_log_CRPS_forecast),
     by = c("state", "date", "case_forecast_start")
   ) %>%
-  mutate(state = factor(state, levels = unique(state))) %>%
   
   drop_na(log_CRPS_ward) %>%
   
-  mutate(log_CRPS_ward = log(log_CRPS_ward),
-         log_CRPS_case = log(log_CRPS_case))
+  mutate(x = log_CRPS_ward - log_CRPS_case,
+         x = atan(log_CRPS_ward / log_CRPS_case))
+
+cowplot::plot_grid(
+  plot_data %>%
+    filter(state == "NT") %>% 
+    ggplot() +
+    
+    geom_linerange(aes(x = case_forecast_start, ymin = 0, ymax = log_CRPS_ward),
+                   colour = "blue",
+                   linewidth = 4, position = position_nudge(x = -1)) +
+    
+    geom_linerange(aes(x = case_forecast_start, ymin = 0, ymax = log_CRPS_case),
+                   colour = "red",
+                   linewidth = 4, position = position_nudge(x = 1)) +
+    
+    facet_wrap(~state, ncol = 2, scales = "free_y") +
+    
+    coord_cartesian(ylim = c(0, 1.5)) +
+    
+    plot_theme +
+    theme(legend.position = "none"),
+  plot_data %>%
+    filter(state == "NT") %>% 
+    ggplot() +
+    geom_linerange(aes(x = case_forecast_start,
+                       ymin = 0,
+                       ymax = x,
+                       colour = log_CRPS_ward - log_CRPS_case < 0,
+                       group = case_forecast_start),
+                   linewidth = 4) +
+    
+    facet_wrap(~state, ncol = 2, scales = "free_y") +
+    
+    coord_cartesian(ylim = c(0, 1)) +
+    
+    plot_theme +
+    theme(legend.position = "none"),
+  
+  ncol = 1, align = "v"
+)
+
+
+plot_data %>%
+  filter(state == "QLD",
+         days_ahead > 14) %>% 
+  ggplot() +
+  geom_point(aes(x = date, y = x / (pi / 4) - 1)) +
+  #geom_line(aes(x = case_forecast_start, y = sqrt(log_CRPS_ward ^ 2 + log_CRPS_case ^ 2))) +
+  
+  facet_wrap(~state, ncol = 2, scales = "free_y") +
+  
+  coord_cartesian(ylim = c(-1, 1)) +
+  
+  plot_theme +
+  theme(legend.position = "none")
+
+
+
+
+
+
+

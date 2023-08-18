@@ -6,38 +6,36 @@ library(lubridate)
 
 source("R/plots_common.R")
 
-forecast_quants_retro <- tar_read(retro_forecasts_data)$quants %>%
-  filter(state %in% c("NT", "TAS", "ACT"))
+forecast_quants_retro <- tar_read(retro_forecasts_data)$quants
 occupancy_data <- tar_read(occupancy_data_total)
 
 
-performance_data_retro <- tar_read(retro_performance_data) %>%
-  filter(state %in% c("NT", "TAS", "ACT"))
+performance_data_retro <- tar_read(retro_performance_data)
 
 performance_data_retro %>%
-  filter(date >= ymd("2023-03-01"), days_ahead > 14) %>% 
   select(suffix, state, group, run_date, case_forecast_start, date, metric = z_CRPS_forecast) %>%
   pivot_wider(names_from = suffix, values_from = metric) %>% 
   rename(
     baseline = test_pf_b_baseline,
-    experimental = test_pf_b_3
+    experimental = test_abc_2
   ) %>% 
   
   group_by(run_date, group, state) %>%
   summarise(baseline = mean(baseline), experimental = mean(experimental)) %>%
   
   mutate(skill_score = (baseline - experimental) / baseline) %>% 
-  group_by(group, state) %>%
-  summarise(p_better = sum(skill_score > 0) / n()) %>% 
-  
+  # group_by(group, state) %>%
+  # summarise(p_better = sum(skill_score > 0) / n(),
+  #           skill_score = mean(skill_score)) %>% 
+  # 
   ggplot() +
-  geom_point(aes(x = p_better, y = group)) +
+  geom_point(aes(x = skill_score, y = group)) +
   
-  geom_vline(xintercept = 0.5) +
+  geom_vline(xintercept = 0) +
   
   facet_wrap(~state) +
   
-  coord_cartesian(xlim = c(0, 1))
+  coord_cartesian(xlim = c(-10, 1))
 
 
 get_performance <- . %>% 
@@ -49,14 +47,22 @@ get_performance <- . %>%
     .groups = "drop"
   )
 
+clean_for_plots <- . %>%
+  mutate(group = factor(group,
+                        c("ward", "ICU"),
+                        labels = c("Ward", "ICU")),
+         suffix = factor(suffix,
+                         c("test_pf_b_baseline", "test_abc_2"),
+                         c("Old model", "New model")))
 
-performance_data_retro %>%
-  filter(date >= ymd("2023-03-01")) %>% 
+
+performance_data_retro %>% 
+  clean_for_plots() %>% 
   group_by(state, group, suffix) %>%
   get_performance() %>%
   
   ggplot() +
-  geom_col(aes(x = state, y = CRPS_forecast, fill = suffix),
+  geom_col(aes(y = state, x = CRPS_forecast, fill = suffix),
            position = position_dodge()) +
   
   plot_theme +
@@ -66,6 +72,7 @@ performance_data_retro %>%
 
 performance_data_retro %>%
   filter(group == "ward") %>% 
+  clean_for_plots() %>% 
   group_by(state, group, days_ahead, suffix) %>%
   get_performance() %>%
   
@@ -75,7 +82,25 @@ performance_data_retro %>%
   
   plot_theme +
   
-  facet_wrap(~state)
+  xlab("Horizon (days ahead)") +
+  
+  ylab("CRPS (on log-transformed counts)") +
+  
+  facet_wrap(~state, ncol = 4)
+
+
+performance_data_retro %>%
+  filter(group == "ward",
+         state == "ACT") %>% 
+  
+  ggplot() +
+  geom_line(aes(x = days_ahead, y = z_log_CRPS_forecast, group = run_date, colour = run_date),
+            alpha = 0.5,
+            position = position_dodge()) +
+  
+  plot_theme +
+  
+  facet_wrap(~suffix)
 
 
 performance_data_retro %>%
@@ -142,23 +167,23 @@ color_list <- list("ward" = ward_base_colour, "ICU" = ICU_base_colour)
 
 plot_meta <- tribble(
   ~i_state, ~i_group, ~y_upper, ~y_label, ~y_label_asterisk,
-  # "NSW", "ward", 3400, 3280, 3180,
-  # "NSW", "ICU", 150, 140, 136,
-  # 
-  # "SA", "ward", 650, 640, 620,
-  # "SA", "ICU", 45, 40, 39,
-  # 
-  # "VIC", "ward", 1400, 1350, 1300,
-  # "VIC", "ICU", 150, 140, 135,
+  "NSW", "ward", 3400, 3280, 3180,
+  "NSW", "ICU", 150, 140, 136,
+
+  "SA", "ward", 650, 640, 620,
+  "SA", "ICU", 45, 40, 39,
+
+  "VIC", "ward", 1400, 1350, 1300,
+  "VIC", "ICU", 150, 140, 135,
   
   "NT", "ward", 150, 140, 135,
   "NT", "ICU", 25, 20, 17,
-  # 
-  # "WA", "ward", 1200, 1100, 1050,
-  # "WA", "ICU", 45, 40, 39,
-  # 
-  # "QLD", "ward", 1800, 1750, 1700,
-  # "QLD", "ICU", 60, 55, 54,
+
+  "WA", "ward", 1200, 1100, 1050,
+  "WA", "ICU", 45, 40, 39,
+
+  "QLD", "ward", 1800, 1750, 1700,
+  "QLD", "ICU", 60, 55, 54,
   
   "TAS", "ward", 280, 270, 265,
   "TAS", "ICU", 25, 20, 19,
@@ -167,7 +192,7 @@ plot_meta <- tribble(
   "ACT", "ICU", 35, 30, 29
   
 ) %>%
-  expand_grid(i_suffix = c("test_pf_b_3", "test_pf_b_baseline"))
+  expand_grid(i_suffix = c("test_abc_2", "test_pf_b_baseline"))
 
 asterisk_runs <- plot_meta %>%
   right_join(
@@ -218,8 +243,10 @@ plots <- pmap(
                      
                      size = 0.3, stroke = 0.4) +
           
-          scale_fill_manual(values = c("final" = ggokabeito::palette_okabe_ito(1),
-                                       "test_pf3" = ggokabeito::palette_okabe_ito(2))) +
+          scale_fill_manual(
+            values = c("test_pf_b_baseline" = "#F8766D",
+                       "test_abc_2" = "#00BFC4")
+          ) +
           
           p_common +
           
@@ -282,7 +309,7 @@ plots <- pmap(
       cowplot::plot_grid(plotlist = ., ncol = 1, align = "v")
     
     cowplot::plot_grid(
-      ggplot() + theme_minimal() + ggtitle(str_c(i_suffix, " \u2012 Forecasted ", i_group, " occupancy \u2012 ", state_nice_names[i_state])) +
+      ggplot() + theme_minimal() + ggtitle(str_c(c("test_abc_2" = "New model", "test_pf_b_baseline" = "Old model")[i_suffix], " \u2012 Forecasted ", i_group, " occupancy \u2012 ", state_nice_names[i_state])) +
         theme(plot.title = element_text(margin = margin())),
       p_grid,
       rel_heights = c(0.04, 1),
@@ -297,7 +324,7 @@ plots_ordered <- plots[order(plot_meta$i_state)]
 
 
 
-cairo_pdf("results/perf_pf_2023_b_3.pdf",
+cairo_pdf("results/perf_abc_2.pdf",
           width = 8.5, height = 9, onefile = TRUE)
 for (i in 1:length(plots_ordered)) {
   plot(plots_ordered[[i]])
