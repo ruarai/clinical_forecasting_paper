@@ -54,10 +54,12 @@ states <- unique(plot_perf_data$state)
 states <- states[order(states)]
 
 
+
 bias_colours <- c(
-  paletteer::paletteer_d("LaCroixColoR::PassionFruit", type = "discrete")[1] %>% shades::brightness(0.5),
-  paletteer::paletteer_d("LaCroixColoR::PassionFruit", type = "discrete")[6]
+  paletteer::paletteer_d("LaCroixColoR::PassionFruit", type = "discrete")[1] %>% shades::hue(320),
+  paletteer::paletteer_d("LaCroixColoR::PassionFruit", type = "discrete")[1] %>% shades::hue(210)
 )
+
 
 plots <- map(
   states,

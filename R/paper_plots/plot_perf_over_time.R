@@ -81,9 +81,10 @@ trough_tbl <- tribble(
   bind_rows(expand_grid(state = states, date = NA_Date_))
 
 bias_colours <- c(
-  paletteer::paletteer_d("LaCroixColoR::PassionFruit", type = "discrete")[1] %>% shades::brightness(0.5),
-  paletteer::paletteer_d("LaCroixColoR::PassionFruit", type = "discrete")[6]
+  paletteer::paletteer_d("LaCroixColoR::PassionFruit", type = "discrete")[1] %>% shades::hue(320),
+  paletteer::paletteer_d("LaCroixColoR::PassionFruit", type = "discrete")[1] %>% shades::hue(210)
 )
+
 
 plots <- map(
   states,
@@ -165,11 +166,11 @@ plots <- map(
                 plot_perf_data_state) +
       
       geom_linerange(aes(x = date, ymin = -1, ymax = 9.8),
-                     linetype = "dotted",
+                     linetype = "11",
                      peak_tbl_state) +
       
       geom_linerange(aes(x = date, ymin = -1, ymax = 9.8),
-                     linetype = "dotted", alpha = 0.3,
+                     linetype = "11", alpha = 0.3,
                      trough_tbl_state) +
       
       geom_hline(yintercept = 0, alpha = 0.8) +
@@ -227,4 +228,15 @@ ggsave(
   width = 18, height = 8,
   bg = "white"
 )
+
+
+ggsave(
+  "results_paper/results_perf_over_time.pdf",
+  plot = p,
+  scale = 10 / 16,
+  dpi = 300,
+  width = 18, height = 8,
+  bg = "white"
+)
+
 
