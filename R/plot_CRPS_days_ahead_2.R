@@ -236,13 +236,15 @@ p_ICU_summ <- ggplot() +
   ggtitle("ICU forecast performance", "")
 
 
+plot_void <- ggplot() + geom_blank() + theme_void()
 cowplot::plot_grid(
-  p_ward_summ, p_ward_days_ahead,
-  p_ICU_summ, p_ICU_days_ahead,
+  p_ward_summ, plot_void, p_ward_days_ahead,
+  p_ICU_summ, plot_void, p_ICU_days_ahead,
   
-  ncol = 2, align = "hv", axis = "lrtb",
-  rel_widths = c(1, 2)
+  ncol = 3, align = "hv", axis = "lrtb",
+  rel_widths = c(1, 0.2, 2)
 )
+
 
 
 
@@ -250,7 +252,7 @@ ggsave(
   "results_paper/results_perf_summary.png",
   bg = "white",
   scale = 10 / 16,
-  width = 15, height = 9
+  width = 16, height = 9
 )
 
 
