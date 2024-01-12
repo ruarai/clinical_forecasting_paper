@@ -1,9 +1,18 @@
 library(targets)
+
 library(tidyverse)
-library(ggplot2)
+library(lubridate)
+
 library(distributional)
 library(tsibble)
 library(fabletools)
+
+library(lemon)
+library(cowplot)
+library(ggokabeito)
+library(ggdist)
+
+library(arrow)
 
 options(tidyverse.quiet = TRUE)
 
@@ -40,9 +49,7 @@ list(
     get_performance_data(
       paper_forecasts_data$trajs,
       occupancy_data
-    ),
-    
-    format = "qs"
+    )
   ),
   
   tar_target(figure_one_state, plot_one_state(paper_forecasts_data, occupancy_data)),

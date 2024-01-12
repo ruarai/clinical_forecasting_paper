@@ -1,8 +1,7 @@
 
 
 plot_case_perf <- function(paper_forecasts_data, occupancy_data, performance_data) {
-  require(distributional)
-  
+
   forecast_quants <- paper_forecasts_data$quants
   
   

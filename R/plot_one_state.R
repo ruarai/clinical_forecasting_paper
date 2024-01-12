@@ -4,15 +4,7 @@ plot_one_state <- function(paper_forecasts_data, occupancy_data) {
   forecast_quants <- paper_forecasts_data$quants
   
   
-  ward_base_colour <- "#b53aa0"
-  ICU_base_colour <- "#008200"
-  
   i_state <- "NSW"
-  
-  alpha_vals <- scales::rescale(rev(1/1.7^(1:8)), to = c(0.05, 0.99))
-  ward_cols <- shades::opacity(ward_base_colour, alpha_vals)
-  ICU_cols <- shades::opacity(ICU_base_colour, alpha_vals)
-  color_list <- list("ward" = ward_cols, "ICU" = ICU_cols)
   
   
   runs <- forecast_quants %>%

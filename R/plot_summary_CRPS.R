@@ -48,10 +48,6 @@ plot_summary_CRPS <- function(performance_data) {
   }
   
   
-  alpha_vals <- scales::rescale(rev(1/1.7^(1:4)), to = c(0.15, 0.99))
-  ward_cols <- shades::opacity(ward_base_colour, alpha_vals)
-  ICU_cols <- shades::opacity(ICU_base_colour, alpha_vals)
-  
   plot_data <- perf_days_ahead %>%
     group_by(state, group, days_ahead) %>%
     get_tbl_intervals("CRPS_forecast", c(0.5, 0.75, 0.9, 0.95))

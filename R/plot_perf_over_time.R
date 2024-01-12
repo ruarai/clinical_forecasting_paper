@@ -28,14 +28,6 @@ plot_perf_over_time <- function(performance_data, occupancy_data) {
       )
     )
   
-  
-  
-  colour_base <- "red"
-  
-  alpha_vals <- scales::rescale(rev(1/1.7^(1:4)), to = c(0.05, 0.99))
-  fill_colours <- shades::opacity(colour_base, alpha_vals)
-  
-  
   p_common <- list(
     plot_theme,
     theme(panel.grid.major = element_blank(),
@@ -73,10 +65,7 @@ plot_perf_over_time <- function(performance_data, occupancy_data) {
   ) %>%
     bind_rows(expand_grid(state = states, date = NA_Date_))
   
-  bias_colours <- c(
-    paletteer::paletteer_d("LaCroixColoR::PassionFruit", type = "discrete")[1] %>% shades::hue(320),
-    paletteer::paletteer_d("LaCroixColoR::PassionFruit", type = "discrete")[1] %>% shades::hue(210)
-  )
+  bias_colours <- c("#C70E89", "#0E6AC7")
   
   
   plots <- map(
@@ -128,7 +117,6 @@ plot_perf_over_time <- function(performance_data, occupancy_data) {
         
         
         geom_tile(aes(x = date, width = 1.2, y = 0, height = z_log_CRPS_forecast * 2, group = run_date),
-                  #fill = paletteer::paletteer_d("LaCroixColoR::PeachPear", type = "discrete")[4],
                   fill = "grey20",
                   plot_perf_data_state) +
         

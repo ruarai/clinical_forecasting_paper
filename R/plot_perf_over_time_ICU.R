@@ -28,13 +28,6 @@ plot_perf_over_time_ICU <- function(performance_data, occupancy_data) {
     )
   
   
-  
-  colour_base <- "red"
-  
-  alpha_vals <- scales::rescale(rev(1/1.7^(1:4)), to = c(0.05, 0.99))
-  fill_colours <- shades::opacity(colour_base, alpha_vals)
-  
-  
   p_common <- list(
     plot_theme,
     theme(panel.grid.major = element_blank(),
@@ -47,10 +40,7 @@ plot_perf_over_time_ICU <- function(performance_data, occupancy_data) {
   
   
   
-  bias_colours <- c(
-    paletteer::paletteer_d("LaCroixColoR::PassionFruit", type = "discrete")[1] %>% shades::hue(320),
-    paletteer::paletteer_d("LaCroixColoR::PassionFruit", type = "discrete")[1] %>% shades::hue(210)
-  )
+  bias_colours <- c("#C70E89", "#0E6AC7")
   
   
   plots <- map(
