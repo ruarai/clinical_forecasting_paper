@@ -1,13 +1,6 @@
 
 
-
-library(targets)
-library(tidyverse)
-library(lubridate)
-library(distributional)
-
 plot_perf_sharpness_bias <- function(performance_data, occupancy_data) {
-  require(distributional)
   
   perf_bias <- performance_data %>%
     rowwise() %>% 

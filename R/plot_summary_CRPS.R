@@ -2,8 +2,6 @@
 
 
 plot_summary_CRPS <- function(performance_data) {
-  require(distributional)
-  
   
   get_performance <- . %>%
     

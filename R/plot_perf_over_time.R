@@ -2,8 +2,6 @@
 
 
 plot_perf_over_time <- function(performance_data, occupancy_data) {
-  require(distributional)
-  
   
   perf_bias <- performance_data %>% 
     rowwise() %>% 

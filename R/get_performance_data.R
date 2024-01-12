@@ -5,9 +5,6 @@ get_performance_data <- function(
   trajs,
   occupancy_data
 ) {
-  require(tsibble)
-  require(fabletools)
-  require(distributional)
   
   occupancy_timeseries <- occupancy_data %>%
     filter(date >= ymd("2022-01-01"),
