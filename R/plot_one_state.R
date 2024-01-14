@@ -33,7 +33,7 @@ plot_one_state <- function(paper_forecasts_data, occupancy_data) {
   p_common <- list(
     plot_theme,
     scale_x_date(labels = scales::label_date_short(c("%Y", "%B"), sep = " "),
-                 date_breaks = "months"),
+                 date_breaks = "months", expand = expansion()),
     scale_y_continuous(labels = scales::label_comma()),
     geom_blank(aes(y = 0)),
     xlab(NULL), ylab("Count"),
@@ -100,9 +100,8 @@ plot_one_state <- function(paper_forecasts_data, occupancy_data) {
                asterisk_runs %>% filter(group == "ward")) +
     
     
-    coord_cartesian(xlim = c(ymd("2022-03-15"), ymd("2022-08-20")),
-                    ylim = c(0, 3600),
-                    expand = expansion()) +
+    coord_cartesian(xlim = c(ymd("2022-03-15"), ymd("2022-08-25")),
+                    ylim = c(0, 3600)) +
     
     ggtitle(str_c("Forecasted ward occupancy"))
   
@@ -139,9 +138,8 @@ plot_one_state <- function(paper_forecasts_data, occupancy_data) {
     
     scale_fill_manual(values = color_list$ICU) +
     
-    coord_cartesian(xlim = c(ymd("2022-03-15"), ymd("2022-08-20")),
-                    ylim = c(0, 150),
-                    expand = expansion()) +
+    coord_cartesian(xlim = c(ymd("2022-03-15"), ymd("2022-08-25")),
+                    ylim = c(0, 150)) +
     
     ylab("Count") +
     
