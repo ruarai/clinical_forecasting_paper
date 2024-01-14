@@ -19,6 +19,11 @@ plot_summary_CRPS <- function(performance_data) {
     
     get_performance()
   
+  
+  alpha_vals <- scales::rescale(rev(1/1.7^(1:4)), to = c(0.15, 0.99))
+  ward_cols <- shades::opacity(ward_base_colour, alpha_vals)
+  ICU_cols <- shades::opacity(ICU_base_colour, alpha_vals)
+  
   get_tbl_intervals <- function(
     tbl,
     column_name = "value",
