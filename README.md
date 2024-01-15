@@ -7,8 +7,16 @@ Note that this repository does not include the forecasting model itself, which c
 This project uses [renv](https://cran.r-project.org/web/packages/renv/vignettes/renv.html) and [targets](https://books.ropensci.org/targets/) to handle reproducibility. To reproduce all figures, open the project in R and run the following code:
 
 ```
-# Load the R packages at the version used at time of development:
-renv::restore()
+# Install the requisitive R packages, if necessary:
+install.packages(
+  c("tidyverse", "targets",
+    
+    "distributional", "tsibble", "fabletools",
+    
+    "lemon", "cowplot", "ggokabeito", "ggdist", 
+    
+    "arrow")
+)
 
 # Run the `targets` workflow to produce all figures:
 targets::tar_make()
