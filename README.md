@@ -4,7 +4,7 @@ This repository contains the minimal code required to reproduce the figures as p
 
 Note that this repository does not include the forecasting model itself, which can be found in the following repositories: https://github.com/ruarai/clinical_forecasts and https://github.com/ruarai/curvemush.
 
-This project uses [renv](https://cran.r-project.org/web/packages/renv/vignettes/renv.html) and [targets](https://books.ropensci.org/targets/) to handle reproducibility. To reproduce all figures, open the project in R and run the following code:
+This project uses [targets](https://books.ropensci.org/targets/) to handle basic reproducibility. To reproduce all figures, open the project in R and run the following code:
 
 ```R
 # Install the requisitive R packages, if necessary:
