@@ -6,7 +6,7 @@ Note that this repository does not include the forecasting model itself, which c
 
 This project uses [renv](https://cran.r-project.org/web/packages/renv/vignettes/renv.html) and [targets](https://books.ropensci.org/targets/) to handle reproducibility. To reproduce all figures, open the project in R and run the following code:
 
-```
+```R
 # Install the requisitive R packages, if necessary:
 install.packages(
   c("tidyverse", "targets",
