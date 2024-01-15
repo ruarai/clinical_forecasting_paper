@@ -2,7 +2,7 @@
 
 This repository contains the minimal code required to reproduce the figures as presented in "Forecasting COVID-19 hospital burden to support the Australian public health response".
 
-Note that this repository does not include the forecasting model itself, which can be found in the following repositories: https://github.com/ruarai/clinical_forecasts and https://github.com/ruarai/curvemush.
+Note that this repository does not include the forecasting model itself, which can be found in the following repositories: [clinical_forecast](https://github.com/ruarai/clinical_forecasts) and [curvemush](https://github.com/ruarai/curvemush).
 
 This project uses [targets](https://books.ropensci.org/targets/) to handle basic reproducibility. To reproduce all figures, open the project in R and run the following code:
 
