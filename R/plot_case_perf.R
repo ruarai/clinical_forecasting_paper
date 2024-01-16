@@ -17,8 +17,7 @@ plot_case_perf <- function(paper_forecasts_data, occupancy_data, performance_dat
   
   
   
-  case_forecast_performance <- arrow::read_parquet("data/case_performance.parquet") %>%
-    filter(.model == "ensemble") %>%
+  case_forecast_performance <- read_rds("data/case_performance_subset.rds") %>%
     
     # Hacks to join later
     mutate(origin = case_when(
