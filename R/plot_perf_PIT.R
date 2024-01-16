@@ -61,7 +61,7 @@ plot_perf_PIT <- function(paper_forecasts_data, occupancy_data) {
       ggplot() +
       
       geom_linerange(aes(x = prob + step_size / 2, ymin = 0, ymax = n_within),
-                     size = 3.5 * (step_size / 0.05), colour = "grey60") +
+                     size = 2.5 * (step_size / 0.05), colour = "grey60") +
       
       geom_hline(aes(yintercept = n),
                  group_lines %>% filter(group == i_group),
@@ -83,6 +83,7 @@ plot_perf_PIT <- function(paper_forecasts_data, occupancy_data) {
       
       plot_theme +
       theme(legend.position = "none",
+            panel.grid.major = element_blank(),
             panel.spacing.x = unit(0.75, "cm"))
   }
   
@@ -96,7 +97,7 @@ plot_perf_PIT <- function(paper_forecasts_data, occupancy_data) {
     "results/results_perf_PIT.png",
     bg = "white",
     scale = 10 / 16,
-    width = 15, height = 13
+    width = 15, height = 11
   )
   
 }

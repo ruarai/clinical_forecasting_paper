@@ -12,8 +12,6 @@ library(cowplot)
 library(ggokabeito)
 library(ggdist)
 
-library(arrow)
-
 options(tidyverse.quiet = TRUE)
 
 source("R/get_performance_data.R")
@@ -34,8 +32,7 @@ source("R/plot_supp_all_states.R")
 list(
   tar_target(
     paper_forecasts_data,
-    read_rds("data/paper_forecasts_data.rds"),
-    format = "qs"
+    read_rds("data/paper_forecasts_data.rds")
   ),
   
   tar_target(
