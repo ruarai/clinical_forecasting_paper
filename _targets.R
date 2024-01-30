@@ -1,3 +1,5 @@
+options(tidyverse.quiet = TRUE)
+
 library(targets)
 
 library(tidyverse)
@@ -12,11 +14,9 @@ library(cowplot)
 library(ggokabeito)
 library(ggdist)
 
-options(tidyverse.quiet = TRUE)
+source("R/plots_common.R")
 
 source("R/get_performance_data.R")
-
-source("R/plots_common.R")
 
 source("R/plot_one_state.R")
 source("R/plot_summary_CRPS.R")
@@ -52,7 +52,7 @@ list(
   tar_target(figure_one_state, plot_one_state(paper_forecasts_data, occupancy_data)),
   tar_target(figure_summary_CRPS, plot_summary_CRPS(paper_performance_data)),
   tar_target(figure_perf_over_time, plot_perf_over_time(paper_performance_data, occupancy_data)),
-  tar_target(figure_case_perf, plot_case_perf(paper_forecasts_data, occupancy_data, paper_performance_data)),
+  tar_target(figure_case_perf, plot_case_perf(occupancy_data, paper_performance_data)),
   tar_target(figure_perf_sharpness_bias, plot_perf_sharpness_bias(paper_performance_data, occupancy_data)),
   tar_target(figure_perf_PIT, plot_perf_PIT(paper_forecasts_data, occupancy_data)),
   tar_target(figure_perf_over_time_ICU, plot_perf_over_time_ICU(paper_performance_data, occupancy_data)),

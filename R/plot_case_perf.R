@@ -1,10 +1,6 @@
 
 
-plot_case_perf <- function(paper_forecasts_data, occupancy_data, performance_data) {
-
-  forecast_quants <- paper_forecasts_data$quants
-  
-  
+plot_case_perf <- function(occupancy_data, performance_data) {
   
   perf_bias <- performance_data %>%
     rowwise() %>% 
@@ -51,7 +47,7 @@ plot_case_perf <- function(paper_forecasts_data, occupancy_data, performance_dat
     
     lemon::facet_rep_wrap(~state, nrow = 2) +
     
-    coord_fixed(xlim = c(0, 1.1), ylim = c(0, 1.1), expand = FALSE) +
+    coord_fixed(xlim = c(0, 1.15), ylim = c(0, 1.15), expand = FALSE) +
     scale_x_continuous(breaks = c(0, 0.5, 1)) +
     scale_y_continuous(breaks = c(0, 0.5, 1)) +
     
@@ -87,7 +83,7 @@ plot_case_perf <- function(paper_forecasts_data, occupancy_data, performance_dat
     
     lemon::facet_rep_wrap(~state, nrow = 2) +
     
-    coord_fixed(xlim = c(0, 1.1), ylim = c(0, 1.1), expand = FALSE) +
+    coord_fixed(xlim = c(0, 1.15), ylim = c(0, 1.15), expand = FALSE) +
     scale_x_continuous(breaks = c(0, 0.5, 1)) +
     scale_y_continuous(breaks = c(0, 0.5, 1)) +
     

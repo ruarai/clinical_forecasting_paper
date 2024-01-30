@@ -61,13 +61,6 @@ plot_summary_CRPS <- function(performance_data) {
     group_by(state, group) %>%
     get_tbl_intervals("CRPS_forecast", c(0.5, 0.75, 0.9, 0.95))
   
-  
-  asterisks <- tribble(
-    ~group, ~state, ~y,
-    "ward", "NT", 0.90,
-    "ICU", "ACT", 1.53
-  )
-  
   size_days_ahead <- 1.7
   
   p_ward_days_ahead <- ggplot() +
@@ -83,11 +76,6 @@ plot_summary_CRPS <- function(performance_data) {
                    colour = "white", size = size_days_ahead,
                    plot_data %>% filter(group == "ward")) +
     
-    geom_label(aes(y = y), x = 21, label = "^",
-               label.r = unit(0, "cm"), label.size = 0, size = 4, colour = annotation_colour,
-               alpha = 0,
-               asterisks %>% filter(group == "ward")) +
-    
     
     
     scale_colour_manual(values = ward_cols) +
@@ -98,13 +86,14 @@ plot_summary_CRPS <- function(performance_data) {
     
     ylab("CRPS") +
     
-    scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
+    scale_y_continuous(expand = expansion(mult = c(0, 0.05)),
+                       breaks = c(0, 0.5, 1.0)) +
     
     scale_x_continuous(breaks = c(0, 7, 14, 21),
                        expand = expansion(c(0, 0.05))) +
     
     
-    coord_cartesian(ylim = c(0.0, 1.0)) +
+    coord_cartesian(ylim = c(0.0, 1.15)) +
     
     plot_theme +
     
@@ -127,11 +116,6 @@ plot_summary_CRPS <- function(performance_data) {
     geom_linerange(aes(x = days_ahead, ymin = median - 0.005, ymax = median + 0.005),
                    colour = "white", size = size_days_ahead,
                    plot_data %>% filter(group == "ICU")) +
-    
-    geom_label(aes(y = y), x = 21, label = "^",
-               label.r = unit(0, "cm"), label.size = 0, size = 4, colour = annotation_colour,
-               alpha = 0,
-               asterisks %>% filter(group == "ICU")) +
     
     scale_colour_manual(values = ICU_cols) +
     
