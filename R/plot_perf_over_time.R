@@ -67,6 +67,7 @@ plot_perf_over_time <- function(performance_data, occupancy_data) {
   
   bias_colours <- c("#C70E89", "#0E6AC7")
   
+  l_height <- 11
   
   plots <- map(
     states,
@@ -79,7 +80,7 @@ plot_perf_over_time <- function(performance_data, occupancy_data) {
       trough_tbl_state <- trough_tbl %>%
         filter(state == i_state)
       
-      show_y_lab <- i_state %in% c("ACT", "SA")
+      show_y_lab <- i_state %in% c("ACT", "SA", "NT", "VIC")
       
       p_occ <- ggplot() +
         
@@ -146,12 +147,12 @@ plot_perf_over_time <- function(performance_data, occupancy_data) {
                       fill = bias < 0),
                   plot_perf_data_state) +
         
-        geom_linerange(aes(x = date, ymin = -1, ymax = 9.8),
-                       linetype = "11",
+        geom_linerange(aes(x = date, ymin = -1, ymax = l_height),
+                       linetype = "21",
                        peak_tbl_state) +
         
-        geom_linerange(aes(x = date, ymin = -1, ymax = 9.8),
-                       linetype = "11", alpha = 0.3,
+        geom_linerange(aes(x = date, ymin = -1, ymax = l_height),
+                       linetype = "46",
                        trough_tbl_state) +
         
         geom_hline(yintercept = 0, alpha = 0.8) +
@@ -182,12 +183,20 @@ plot_perf_over_time <- function(performance_data, occupancy_data) {
     }
   )
   
+  p_legend <- cowplot::get_legend(ggplot(expand_grid(x = 1:2, y = 1:2, lt = c("a", "b"))) +
+    geom_line(aes(x, y, linetype = lt)) +
+    scale_linetype_manual(NULL, values = c("21", "46"), labels = c("Peaks", "Troughs")) +
+    guides(linetype = guide_legend(keywidth = unit(2, "cm"))) +
+    theme_minimal() +
+    theme(legend.position = "bottom")
+  )
+  
   
   p <- map(
-    list(c(1, 5), c(2, 6), c(3, 7), c(4, 8)),
-    function(pair) {
+    list(c(1, 3, 5, 7), c(2, 4, 6, 8)),
+    function(quad) {
       cowplot::plot_grid(
-        plotlist = unlist(plots[pair], recursive = FALSE),
+        plotlist = unlist(plots[quad], recursive = FALSE),
         align = "v",
         rel_heights = c(2, 1, 1.2, 2, 1, 1.2),
         ncol = 1
@@ -196,27 +205,18 @@ plot_perf_over_time <- function(performance_data, occupancy_data) {
   ) %>%
     cowplot::plot_grid(
       plotlist = .,
-      ncol = 4, align = "h"
+      ncol = 2, align = "h"
     )
   
+  p_with_legend <- cowplot::plot_grid(p, p_legend, rel_heights = c(1, 0.07), ncol = 1)
   
   
   ggsave(
-    "results/results_perf_over_time.png",
-    plot = p,
+    "results/results_perf_over_time_tall.png",
+    p_with_legend,
     scale = 10 / 16,
     dpi = 300,
-    width = 18, height = 8,
-    bg = "white"
-  )
-  
-  
-  ggsave(
-    "results/results_perf_over_time.pdf",
-    plot = p,
-    scale = 10 / 16,
-    dpi = 300,
-    width = 18, height = 8,
+    width = 12, height = 14,
     bg = "white"
   )
   

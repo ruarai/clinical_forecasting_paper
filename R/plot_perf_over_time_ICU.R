@@ -41,6 +41,7 @@ plot_perf_over_time_ICU <- function(performance_data, occupancy_data) {
   
   
   bias_colours <- c("#C70E89", "#0E6AC7")
+  l_height <- 11
   
   
   plots <- map(
@@ -49,7 +50,7 @@ plot_perf_over_time_ICU <- function(performance_data, occupancy_data) {
       plot_perf_data_state <- plot_perf_data %>%
         filter(state == i_state)
       
-      show_y_lab <- i_state %in% c("ACT", "SA")
+      show_y_lab <- i_state %in% c("ACT", "SA", "NT", "VIC")
       
       p_occ <- ggplot() +
         
@@ -87,7 +88,6 @@ plot_perf_over_time_ICU <- function(performance_data, occupancy_data) {
         
         
         geom_tile(aes(x = date, width = 1.2, y = 0, height = z_log_CRPS_forecast * 2, group = run_date),
-                  #fill = paletteer::paletteer_d("LaCroixColoR::PeachPear", type = "discrete")[4],
                   fill = "grey20",
                   plot_perf_data_state) +
         
@@ -145,12 +145,11 @@ plot_perf_over_time_ICU <- function(performance_data, occupancy_data) {
     }
   )
   
-  
   p <- map(
-    list(c(1, 5), c(2, 6), c(3, 7), c(4, 8)),
-    function(pair) {
+    list(c(1, 3, 5, 7), c(2, 4, 6, 8)),
+    function(quad) {
       cowplot::plot_grid(
-        plotlist = unlist(plots[pair], recursive = FALSE),
+        plotlist = unlist(plots[quad], recursive = FALSE),
         align = "v",
         rel_heights = c(2, 1, 1.2, 2, 1, 1.2),
         ncol = 1
@@ -159,15 +158,19 @@ plot_perf_over_time_ICU <- function(performance_data, occupancy_data) {
   ) %>%
     cowplot::plot_grid(
       plotlist = .,
-      ncol = 4, align = "h"
+      ncol = 2, align = "h"
     )
   
+  p_legend <- ggplot() + geom_blank() + theme_void()
   
+  p_with_legend <- cowplot::plot_grid(p, p_legend, rel_heights = c(1, 0.07), ncol = 1)
   
   ggsave(
-    "results/results_perf_over_time_ICU.png",
-    plot = p,
-    width = 12, height = 6,
+    "results/results_perf_over_time_ICU_tall.png",
+    p_with_legend,
+    scale = 10 / 16,
+    dpi = 300,
+    width = 12, height = 14,
     bg = "white"
   )
   
