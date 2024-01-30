@@ -46,8 +46,6 @@ plot_case_perf <- function(paper_forecasts_data, occupancy_data, performance_dat
     filter(group == "ward") %>% 
     ggplot() +
     
-    geom_smooth(aes(case_CRPS_log, y = occ_CRPS_log), method = "lm",
-                colour = annotation_colour, alpha = 0.2) +
     geom_point(aes(x = case_CRPS_log, y = occ_CRPS_log),
                size = 0.5, stroke = 0.5) +
     
@@ -84,8 +82,6 @@ plot_case_perf <- function(paper_forecasts_data, occupancy_data, performance_dat
     filter(group == "ICU") %>% 
     ggplot() +
     
-    geom_smooth(aes(case_CRPS_log, y = occ_CRPS_log), method = "lm",
-                colour = annotation_colour, alpha = 0.2) +
     geom_point(aes(x = case_CRPS_log, y = occ_CRPS_log),
                size = 0.5, stroke = 0.5) +
     
@@ -131,8 +127,6 @@ plot_case_perf <- function(paper_forecasts_data, occupancy_data, performance_dat
     
     ggplot() +
     
-    geom_smooth(aes(x = bias, y = occ_bias), method = "lm",
-                colour = annotation_colour, alpha = 0.2) +
     geom_point(aes(x = bias, y = occ_bias),
                size = 0.5, stroke = 0.5) +
     
