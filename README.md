@@ -13,7 +13,7 @@ install.packages(
     
     "distributional", "tsibble", "fabletools",
     
-    "lemon", "cowplot", "ggokabeito", "ggdist", 
+    "lemon", "cowplot", "ggokabeito", "ggdist", "shades",
     
     "arrow")
 )
