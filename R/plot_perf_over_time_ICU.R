@@ -67,7 +67,7 @@ plot_perf_over_time_ICU <- function(performance_data, occupancy_data) {
         coord_cartesian(xlim = c(ymd("2022-03-15"), ymd("2022-09-01")),
                         ylim = c(0, NA)) +
         
-        scale_y_continuous(breaks = scales::breaks_extended(4),
+        scale_y_continuous(breaks = scales::breaks_extended(3),
                            labels = scales::label_comma(),
                            expand = expansion(mult = c(0, 0.1))) +
         

@@ -97,7 +97,7 @@ get_performance_data <- function(
     ) %>%
     
     mutate(
-      days_ahead = as.numeric((date - case_forecast_start - 7))
+      days_ahead = as.numeric((date - case_forecast_start - 7) / ddays(1))
     ) %>%
     
     mutate(
