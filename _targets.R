@@ -28,6 +28,7 @@ source("R/plot_perf_PIT.R")
 source("R/plot_perf_over_time_ICU.R")
 
 source("R/plot_supp_all_states.R")
+source("R/plot_abc_before_after.R")
 
 list(
   tar_target(
@@ -49,6 +50,11 @@ list(
     )
   ),
   
+  tar_target(
+    before_after_trajectories,
+    read_rds("data/abc_before_after_trajectories.rds")
+  ),
+  
   tar_target(figure_one_state, plot_one_state(paper_forecasts_data, occupancy_data)),
   tar_target(figure_summary_CRPS, plot_summary_CRPS(paper_performance_data)),
   tar_target(figure_perf_over_time, plot_perf_over_time(paper_performance_data, occupancy_data)),
@@ -56,5 +62,8 @@ list(
   tar_target(figure_perf_sharpness_bias, plot_perf_sharpness_bias(paper_performance_data, occupancy_data)),
   tar_target(figure_perf_PIT, plot_perf_PIT(paper_forecasts_data, occupancy_data)),
   tar_target(figure_perf_over_time_ICU, plot_perf_over_time_ICU(paper_performance_data, occupancy_data)),
-  tar_target(figure_supp_all_states, plot_supp_all_states(paper_forecasts_data, occupancy_data, paper_performance_data))
+  tar_target(figure_supp_all_states, plot_supp_all_states(paper_forecasts_data, occupancy_data, paper_performance_data)),
+  
+  
+  tar_target(figure_abc_before_after, plot_abc_before_after(before_after_trajectories, occupancy_data))
 )
