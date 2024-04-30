@@ -104,9 +104,12 @@ plot_summary_CRPS <- function(performance_data) {
     
     theme(panel.grid.major = element_blank(),
           panel.spacing.x = unit(0.5, "cm"),
+          plot.title = ggtext::element_markdown(),
           legend.position = "none") +
     
-    ggtitle(expression(bold(B)))
+    ggtitle("<b>A</b> \u2013 Forecast performance by horizon (Ward)")
+  
+  p_ward_days_ahead
   
   
   
@@ -148,9 +151,10 @@ plot_summary_CRPS <- function(performance_data) {
     
     theme(panel.grid.major = element_blank(),
           panel.spacing.x = unit(0.5, "cm"),
+          plot.title = ggtext::element_markdown(),
           legend.position = "none") +
     
-    ggtitle(expression(bold("D")))
+    ggtitle("<b>C</b> \u2013 Forecast performance by horizon (ICU)")
   
   
   ward_state_order <- plot_data_summ %>% filter(group == "ward", quant == 95) %>% arrange(median) %>% pull(state) %>% rev()
@@ -188,9 +192,11 @@ plot_summary_CRPS <- function(performance_data) {
     plot_theme +
     
     theme(legend.position = "none",
-          panel.grid.major.x = element_blank()) +
+          panel.grid.major.x = element_blank(),
+          plot.margin = margin(5.5, 10.5, 5.5, 5.5, unit = "pt"),
+          plot.title = ggtext::element_markdown()) +
     
-    ggtitle(expression(bold("A")))
+    ggtitle("<b>B</b> \u2013 Summary performance (Ward)")
   
   ICU_state_order <- plot_data_summ %>% filter(group == "ICU", quant == 95) %>% arrange(median) %>% pull(state) %>% rev()
   
@@ -227,18 +233,21 @@ plot_summary_CRPS <- function(performance_data) {
     plot_theme +
     
     theme(legend.position = "none",
-          panel.grid.major.x = element_blank()) +
+          panel.grid.major.x = element_blank(),
+          plot.margin = margin(5.5, 10.5, 5.5, 5.5, unit = "pt"),
+          plot.title = ggtext::element_markdown()) +
     
-    ggtitle(expression(bold("C")))
+    ggtitle("<b>D</b> \u2013 Summary performance (ICU)")
   
   
   plot_void <- ggplot() + geom_blank() + theme_void()
+  cowplot::set_null_device("agg")
   cowplot::plot_grid(
-    p_ward_summ, plot_void, p_ward_days_ahead,
-    p_ICU_summ, plot_void, p_ICU_days_ahead,
+    p_ward_days_ahead, plot_void, p_ward_summ,
+    p_ICU_days_ahead, plot_void, p_ICU_summ,
     
     ncol = 3, 
-    rel_widths = c(1, 0.1, 2)
+    rel_widths = c(2, 0.1, 1)
   )
   
   
@@ -249,9 +258,8 @@ plot_summary_CRPS <- function(performance_data) {
     bg = "white",
     device = png,
     scale = 10 / 16,
-    width = 16, height = 9
+    width = 16, height = 12
   )
-
 }
 
 
