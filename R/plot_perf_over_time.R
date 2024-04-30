@@ -216,7 +216,7 @@ plot_perf_over_time <- function(performance_data, occupancy_data) {
     p_with_legend,
     scale = 10 / 16,
     dpi = 300,
-    width = 12, height = 14,
+    width = 13, height = 14,
     bg = "white"
   )
   

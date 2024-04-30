@@ -7,7 +7,7 @@ plot_abc_before_after <- function(
     
     mutate(class = factor(class,
                           c("prior_without_adj", "prior_with_adj", "posterior"),
-                          c("Prior (without H, L)", "Prior (with H, L)", "Posterior (with H, L)")))
+                          c("  ", "   ", " ")))
   
   date_case_forecast_start <- max(trajectories_sub$date) - days(28)
   date_forecast_start <- max(trajectories_sub$date) - days(21)
@@ -24,21 +24,23 @@ plot_abc_before_after <- function(
   p_common <- list(
     plot_theme,
     scale_x_date(labels = scales::label_date_short(c("%Y", "%B"), sep = " "),
-                 date_breaks = "months", expand = expansion()),
+                 date_breaks = "months"),
     scale_y_continuous(labels = scales::label_comma()),
     geom_blank(aes(y = 0)),
     xlab(NULL), ylab("Count"),
     
-    geom_vline(xintercept = date_forecast_start,
-               colour = annotation_colour,
-               linetype = 'dashed', alpha = 0.3),
-    geom_vline(xintercept = date_case_forecast_start + days(1),
-               colour = annotation_colour,
-               linetype = '11', alpha = 0.3),
+    # geom_vline(xintercept = date_forecast_start,
+    #            colour = annotation_colour,
+    #            linetype = 'dashed', alpha = 0.3),
+    # geom_vline(xintercept = date_case_forecast_start + days(1),
+    #            colour = annotation_colour,
+    #            linetype = '11', alpha = 0.3),
     
     theme(legend.position = "none",
           axis.text = element_text(size = 10),
           axis.line.x = element_blank(),
+          strip.text = element_text(size = 14),
+          plot.title = element_text(hjust = 1),
           panel.spacing.y = unit(0.5, "cm"),
           panel.grid.major = element_blank()),
     
@@ -51,6 +53,9 @@ plot_abc_before_after <- function(
     filter(state == "VIC") %>% 
     
     ggplot() +
+    annotate("rect",
+             xmin = date_case_forecast_start + days(1), xmax = date_forecast_start,
+             ymin = 0, ymax = Inf, fill = annotation_colour, alpha = 0.1) +
     geom_ribbon(aes(x = date, ymin = lower, ymax = upper, group = quant, fill = quant)) +
     
     geom_line(aes(x = date, y = count, group = sample),
@@ -67,22 +72,30 @@ plot_abc_before_after <- function(
                occupancy_data %>% filter(state == "VIC", group == "ward",
                                          date <= date_forecast_start)) +
     
-    facet_wrap(~class, ncol = 1, scales = "free") +
+    facet_wrap(~class, ncol = 1) +
     
     scale_fill_manual(values = color_list$ward) +
     
     coord_cartesian(ylim = c(0, 1200),
-                    xlim = c(ymd("2022-05-01", NA))) +
+                    xlim = c(ymd("2022-05-15", NA))) +
     
     p_common +
     
-    ggtitle("A \u2012 Victoria")
+    #ggtitle("Victoria") +
+    
+    theme(plot.margin = margin(r = 0.5, t = 0.25, l = 0.25, b = 0.25, unit = "cm"))
+  
+  p_VIC_quants
   
   
   p_NT_quants <- quants_sub %>% 
     filter(state == "NT") %>% 
     
     ggplot() +
+    annotate("rect",
+             xmin = date_case_forecast_start + days(1), xmax = date_forecast_start,
+             ymin = 0, ymax = Inf, fill = annotation_colour, alpha = 0.1) +
+    geom_ribbon(aes(x = date, ymin = lower, ymax = upper, group = quant, fill = quant)) +
     geom_ribbon(aes(x = date, ymin = lower, ymax = upper, group = quant, fill = quant)) +
     
     geom_line(aes(x = date, y = count, group = sample),
@@ -99,25 +112,37 @@ plot_abc_before_after <- function(
                occupancy_data %>% filter(state == "NT", group == "ward",
                                          date <= date_forecast_start)) +
     
-    facet_wrap(~class, ncol = 1, scales = "free") +
+    facet_wrap(~class, ncol = 1) +
     
     scale_fill_manual(values = color_list$ward) +
     
     coord_cartesian(ylim = c(0, 100),
-                    xlim = c(ymd("2022-05-01", NA))) +
+                    xlim = c(ymd("2022-05-15", NA))) +
     
     p_common +
     
-    ggtitle("B \u2012 Northern Territory")
+    #ggtitle("Northern Territory") +
+    
+    theme(plot.margin = margin(l = 0.5, t = 0.25, b = 0.25, r = 0.25, unit = "cm"))
   
   
   
   cowplot::plot_grid(
     p_VIC_quants, p_NT_quants, ncol = 2
-  )
+  ) + 
+    cowplot::draw_text("A \u2013 Model outputs (without H, L)", x = 0.03, y = 0.95, hjust = 0) +
+    cowplot::draw_text("B \u2013 Model outputs (with H, L)", x = 0.03, y = 0.64, hjust = 0) +
+    cowplot::draw_text("C \u2013 Fit model outputs (with H, L)", x = 0.03, y = 0.32, hjust = 0)
   
   ggsave(
     "results/results_ABC_before_after.png",
+    bg = "white",
+    scale = 10 / 16,
+    width = 16, height = 12
+  )
+  
+  ggsave(
+    "results/results_ABC_before_after.pdf",
     bg = "white",
     scale = 10 / 16,
     width = 16, height = 12

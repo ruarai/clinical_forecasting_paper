@@ -38,7 +38,7 @@ plot_one_state <- function(paper_forecasts_data, occupancy_data) {
     geom_blank(aes(y = 0)),
     xlab(NULL), ylab("Count"),
     facet_wrap(~id_mod, ncol = 1),
-    geom_vline(aes(xintercept = case_forecast_start + ddays(7)),
+    geom_vline(aes(xintercept = case_forecast_start + ddays(8)),
                colour = annotation_colour,
                runs, linetype = 'dashed', alpha = 0.3),
     
@@ -66,7 +66,7 @@ plot_one_state <- function(paper_forecasts_data, occupancy_data) {
   
   plot_data_tile <- plot_data_mod %>%
     mutate(
-      days_ahead = as.numeric((date - case_forecast_start - ddays(7)) / ddays(1))
+      days_ahead = (date - case_forecast_start - ddays(7) / ddays(1))
     ) %>%
     filter(days_ahead > 7, days_ahead <= 14)
   
@@ -100,7 +100,7 @@ plot_one_state <- function(paper_forecasts_data, occupancy_data) {
                asterisk_runs %>% filter(group == "ward")) +
     
     
-    coord_cartesian(xlim = c(ymd("2022-03-15"), ymd("2022-08-25")),
+    coord_cartesian(xlim = c(ymd("2022-03-11"), ymd("2022-08-25")),
                     ylim = c(0, 3600)) +
     
     ggtitle(str_c("Forecasted ward occupancy"))
@@ -138,7 +138,7 @@ plot_one_state <- function(paper_forecasts_data, occupancy_data) {
     
     scale_fill_manual(values = color_list$ICU) +
     
-    coord_cartesian(xlim = c(ymd("2022-03-15"), ymd("2022-08-25")),
+    coord_cartesian(xlim = c(ymd("2022-03-11"), ymd("2022-08-25")),
                     ylim = c(0, 150)) +
     
     ylab("Count") +

@@ -26,7 +26,7 @@ plot_supp_all_states <- function(paper_forecasts_data, occupancy_data, performan
   p_common <- list(
     plot_theme,
     scale_x_date(labels = scales::label_date_short(c("%Y", "%B"), sep = " "),
-                 date_breaks = "months"),
+                 date_breaks = "months", expand = expansion()),
     scale_y_continuous(labels = scales::label_comma(), breaks = scales::breaks_extended(4), expand = expansion(mult = c(0, 0.05))),
     geom_blank(aes(y = 0)),
     xlab(NULL), ylab("Count"),
@@ -124,7 +124,7 @@ plot_supp_all_states <- function(paper_forecasts_data, occupancy_data, performan
             
             p_common +
             
-            geom_vline(aes(xintercept = case_forecast_start + ddays(7)),
+            geom_vline(aes(xintercept = case_forecast_start + ddays(8)),
                        colour = ggokabeito::palette_okabe_ito(5),
                        runs %>% filter(state == i_state, id_mod == i_mod), linetype = 'dashed', alpha = 0.3) +
             
@@ -140,7 +140,7 @@ plot_supp_all_states <- function(paper_forecasts_data, occupancy_data, performan
             facet_wrap(~id_mod, ncol = 1, scales = "free") +
             
             
-            coord_cartesian(xlim = c(ymd("2022-03-15"), ymd("2022-08-20")),
+            coord_cartesian(xlim = c(ymd("2022-03-11"), ymd("2022-08-25")),
                             ylim = c(0, y_upper)) +
             
             theme(axis.text.x = element_blank(),
@@ -161,13 +161,13 @@ plot_supp_all_states <- function(paper_forecasts_data, occupancy_data, performan
             
             p_common +
             
-            geom_vline(aes(xintercept = case_forecast_start + ddays(7)),
+            geom_vline(aes(xintercept = case_forecast_start + ddays(8)),
                        colour = ggokabeito::palette_okabe_ito(5),
                        runs %>% filter(state == i_state, id_mod == i_mod), linetype = 'dashed', alpha = 0.3) +
             
             ylab("CRPS") +
             
-            coord_cartesian(xlim = c(ymd("2022-03-15"), ymd("2022-08-20")),
+            coord_cartesian(xlim = c(ymd("2022-03-11"), ymd("2022-08-25")),
                             ylim = c(0, max(performance_data_plot_state_group$z_log_CRPS_forecast)))
           
           

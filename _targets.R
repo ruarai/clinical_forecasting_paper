@@ -14,6 +14,8 @@ library(cowplot)
 library(ggokabeito)
 library(ggdist)
 
+library(matrixStats)
+
 source("R/plots_common.R")
 
 source("R/get_performance_data.R")

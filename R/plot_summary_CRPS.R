@@ -24,6 +24,8 @@ plot_summary_CRPS <- function(performance_data) {
   ward_cols <- shades::opacity(ward_base_colour, alpha_vals)
   ICU_cols <- shades::opacity(ICU_base_colour, alpha_vals)
   
+  median_colour <- "black"
+  
   get_tbl_intervals <- function(
     tbl,
     column_name = "value",
@@ -72,10 +74,13 @@ plot_summary_CRPS <- function(performance_data) {
                    size = size_days_ahead,
                    plot_data %>% filter(group == "ward")) +
     
-    geom_linerange(aes(x = days_ahead, ymin = median - 0.003, ymax = median + 0.003),
-                   colour = "white", size = size_days_ahead,
-                   plot_data %>% filter(group == "ward")) +
+    geom_point(aes(x = days_ahead, y = median),
+               colour = "black", size = size_days_ahead * 0.5,
+               plot_data %>% filter(group == "ward")) +
     
+    geom_point(aes(x = days_ahead, y = median),
+               colour = "white", size = size_days_ahead * 0.25, stroke = 0.2,
+               plot_data %>% filter(group == "ward")) +
     
     
     scale_colour_manual(values = ward_cols) +
@@ -99,7 +104,9 @@ plot_summary_CRPS <- function(performance_data) {
     
     theme(panel.grid.major = element_blank(),
           panel.spacing.x = unit(0.5, "cm"),
-          legend.position = "none")
+          legend.position = "none") +
+    
+    ggtitle(expression(bold(B)))
   
   
   
@@ -113,9 +120,13 @@ plot_summary_CRPS <- function(performance_data) {
                    size = size_days_ahead,
                    plot_data %>% filter(group == "ICU")) +
     
-    geom_linerange(aes(x = days_ahead, ymin = median - 0.005, ymax = median + 0.005),
-                   colour = "white", size = size_days_ahead,
-                   plot_data %>% filter(group == "ICU")) +
+    geom_point(aes(x = days_ahead, y = median),
+               colour = "black", size = size_days_ahead * 0.5,
+               plot_data %>% filter(group == "ICU")) +
+    
+    geom_point(aes(x = days_ahead, y = median),
+               colour = "white", size = size_days_ahead * 0.25, stroke = 0.2,
+               plot_data %>% filter(group == "ICU")) +
     
     scale_colour_manual(values = ICU_cols) +
     
@@ -137,7 +148,9 @@ plot_summary_CRPS <- function(performance_data) {
     
     theme(panel.grid.major = element_blank(),
           panel.spacing.x = unit(0.5, "cm"),
-          legend.position = "none")
+          legend.position = "none") +
+    
+    ggtitle(expression(bold("D")))
   
   
   ward_state_order <- plot_data_summ %>% filter(group == "ward", quant == 95) %>% arrange(median) %>% pull(state) %>% rev()
@@ -149,11 +162,15 @@ plot_summary_CRPS <- function(performance_data) {
                    position = position_nudge(y = -0.15),
                    plot_data_summ %>% filter(group == "ward") %>% mutate(state = factor(state, ward_state_order))) +
     
-    geom_linerange(aes(y = state, xmin = median - 0.002, xmax = median + 0.002),
-                   colour = "white",
-                   size = 2.5,
-                   position = position_nudge(y = -0.15),
-                   plot_data_summ %>% filter(group == "ward") %>% mutate(state = factor(state, ward_state_order)))  +
+    geom_point(aes(x = median, y = state),
+               colour = "black", size = 2.5 * 0.5,
+               position = position_nudge(y = -0.15),
+               plot_data_summ %>% filter(group == "ward")) +
+    
+    geom_point(aes(x = median, y = state),
+               colour = "white", size = 2.5 * 0.35, stroke = 0.2,
+               position = position_nudge(y = -0.15),
+               plot_data_summ %>% filter(group == "ward"))  +
     
     ggdist::stat_histinterval(aes(y = state, x = CRPS_forecast),
                               breaks = seq(0, 10, by = 0.01), show_interval = FALSE,
@@ -173,7 +190,7 @@ plot_summary_CRPS <- function(performance_data) {
     theme(legend.position = "none",
           panel.grid.major.x = element_blank()) +
     
-    ggtitle("Ward forecast performance", "")
+    ggtitle(expression(bold("A")))
   
   ICU_state_order <- plot_data_summ %>% filter(group == "ICU", quant == 95) %>% arrange(median) %>% pull(state) %>% rev()
   
@@ -184,11 +201,15 @@ plot_summary_CRPS <- function(performance_data) {
                    position = position_nudge(y = -0.15),
                    plot_data_summ %>% filter(group == "ICU") %>% mutate(state = factor(state, ICU_state_order))) +
     
-    geom_linerange(aes(y = state, xmin = median - 0.002, xmax = median + 0.002),
-                   colour = "white",
-                   size = 2.5,
-                   position = position_nudge(y = -0.15),
-                   plot_data_summ %>% filter(group == "ICU") %>% mutate(state = factor(state, ICU_state_order)))  +
+    geom_point(aes(x = median, y = state),
+               colour = "black", size = 2.5 * 0.5,
+               position = position_nudge(y = -0.15),
+               plot_data_summ %>% filter(group == "ICU")) +
+    
+    geom_point(aes(x = median, y = state),
+               colour = "white", size = 2.5 * 0.35, stroke = 0.2,
+               position = position_nudge(y = -0.15),
+               plot_data_summ %>% filter(group == "ICU"))  +
     
     ggdist::stat_histinterval(aes(y = state, x = CRPS_forecast),
                               breaks = seq(0, 10, by = 0.02), show_interval = FALSE,
@@ -208,7 +229,7 @@ plot_summary_CRPS <- function(performance_data) {
     theme(legend.position = "none",
           panel.grid.major.x = element_blank()) +
     
-    ggtitle("ICU forecast performance", "")
+    ggtitle(expression(bold("C")))
   
   
   plot_void <- ggplot() + geom_blank() + theme_void()
@@ -216,8 +237,8 @@ plot_summary_CRPS <- function(performance_data) {
     p_ward_summ, plot_void, p_ward_days_ahead,
     p_ICU_summ, plot_void, p_ICU_days_ahead,
     
-    ncol = 3, align = "hv", axis = "lrtb",
-    rel_widths = c(1, 0.2, 2)
+    ncol = 3, 
+    rel_widths = c(1, 0.1, 2)
   )
   
   
@@ -226,6 +247,7 @@ plot_summary_CRPS <- function(performance_data) {
   ggsave(
     "results/results_perf_summary.png",
     bg = "white",
+    device = png,
     scale = 10 / 16,
     width = 16, height = 9
   )
