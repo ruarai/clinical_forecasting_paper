@@ -35,7 +35,7 @@ source("R/plot_abc_before_after.R")
 list(
   tar_target(
     paper_forecasts_data,
-    read_rds("data/paper_forecasts_data.rds")
+    read_rds("data/paper_forecasts_data_filt.rds")
   ),
   
   tar_target(

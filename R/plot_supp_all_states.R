@@ -9,6 +9,10 @@ plot_supp_all_states <- function(paper_forecasts_data, occupancy_data, performan
       run_date,
       case_forecast_start
     ) %>%
+    
+    # Append removed NT forecast to ensure correct ordering
+    bind_rows(tibble(state = "NT", run_date = "2022-07-15")) %>% 
+    
     group_by(state) %>% 
     arrange(run_date) %>%
     
