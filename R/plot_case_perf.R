@@ -12,6 +12,16 @@ plot_case_perf <- function(occupancy_data, performance_data) {
            log_sharpness = median(abs(log(forecast_count + 1) - log(forecast_median + 1))) / 0.675)
   
   
+  state_nice_names_wrapped <- c(
+    "SA" = "South Australia",
+    "VIC" = "Victoria",
+    "NSW" = "New South Wales",
+    "QLD" = "Queensland",
+    "ACT" = "Australian Capital\nTerritory",
+    "WA" = "Western Australia",
+    "NT" = "Northern Territory",
+    "TAS" = "Tasmania"
+  )
   
   case_forecast_performance <- read_rds("data/case_performance_subset.rds") %>%
     
@@ -34,7 +44,8 @@ plot_case_perf <- function(occupancy_data, performance_data) {
   plot_data <- performance_data %>%
     group_by(state, group, case_forecast_start) %>%
     summarise(occ_CRPS_log = mean(z_log_CRPS_forecast)) %>%
-    left_join(case_forecast_performance_summ, by = c("case_forecast_start" = "origin", "state"))
+    left_join(case_forecast_performance_summ, by = c("case_forecast_start" = "origin", "state")) %>%
+    mutate(state = state_nice_names_wrapped[state])
   
   plot_data %>% filter(is.na(case_CRPS_log))
   
@@ -120,6 +131,7 @@ plot_case_perf <- function(occupancy_data, performance_data) {
                 group_by(state, case_forecast_start = origin) %>%
                 summarise(bias = mean(bias)),
               by = c("case_forecast_start", "state")) %>%
+    mutate(state = state_nice_names_wrapped[state]) %>%
     
     ggplot() +
     

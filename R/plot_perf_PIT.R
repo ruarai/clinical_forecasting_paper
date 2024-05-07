@@ -57,14 +57,16 @@ plot_perf_PIT <- function(paper_forecasts_data, occupancy_data) {
   
   plot_group <- function(i_group) {
     plot_data %>%
-      filter(group == i_group) %>% 
+      filter(group == i_group) %>%
+      mutate(state = state_nice_names[state]) %>% 
       ggplot() +
       
       geom_linerange(aes(x = prob + step_size / 2, ymin = 0, ymax = n_within),
                      size = 2.5 * (step_size / 0.05), colour = "grey60") +
       
       geom_hline(aes(yintercept = n),
-                 group_lines %>% filter(group == i_group),
+                 group_lines %>% filter(group == i_group) %>%
+                   mutate(state = state_nice_names[state]),
                  colour = annotation_colour,
                  linetype = "dashed") +
       

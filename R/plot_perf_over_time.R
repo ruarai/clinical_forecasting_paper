@@ -26,7 +26,8 @@ plot_perf_over_time <- function(performance_data, occupancy_data) {
       tibble(
         state = "ACT", date = c(ymd("2022-04-15"), ymd("2022-04-17")), ix_mod_2 = 1
       )
-    )
+    ) %>%
+    mutate(state = state_nice_names[state])
   
   p_common <- list(
     plot_theme,
@@ -54,7 +55,8 @@ plot_perf_over_time <- function(performance_data, occupancy_data) {
     "QLD", ymd("2022-04-13"),
     "VIC", ymd("2022-05-27"),
     "WA", ymd("2022-05-18")
-  )
+  ) %>%
+    mutate(state = state_nice_names[state])
   
   trough_tbl <- tribble(
     ~state, ~date,
@@ -63,7 +65,8 @@ plot_perf_over_time <- function(performance_data, occupancy_data) {
     "VIC", ymd("2022-06-22"),
     "WA", ymd("2022-07-01")
   ) %>%
-    bind_rows(expand_grid(state = states, date = NA_Date_))
+    bind_rows(expand_grid(state = states, date = NA_Date_)) %>%
+    mutate(state = state_nice_names[state])
   
   bias_colours <- c("#C70E89", "#0E6AC7")
   
@@ -80,7 +83,7 @@ plot_perf_over_time <- function(performance_data, occupancy_data) {
       trough_tbl_state <- trough_tbl %>%
         filter(state == i_state)
       
-      show_y_lab <- i_state %in% c("ACT", "SA", "NT", "VIC")
+      show_y_lab <- i_state %in% state_nice_names[c("ACT", "SA", "NT", "VIC")]
       
       p_occ <- ggplot() +
         

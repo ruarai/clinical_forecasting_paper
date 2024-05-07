@@ -55,11 +55,24 @@ plot_summary_CRPS <- function(performance_data) {
   }
   
   
+  state_nice_names_suffixed <- c(
+    "SA" = "South Australia (SA)",
+    "VIC" = "Victoria (VIC)",
+    "NSW" = "New South Wales\n(NSW)",
+    "QLD" = "Queensland (QLD)",
+    "ACT" = "Australian Capital\nTerritory (ACT)",
+    "WA" = "Western Australia\n(WA)",
+    "NT" = "Northern Territory\n(NT)",
+    "TAS" = "Tasmania (TAS)"
+  )
+  
+  
   plot_data <- perf_days_ahead %>%
     group_by(state, group, days_ahead) %>%
-    get_tbl_intervals("CRPS_forecast", c(0.5, 0.75, 0.9, 0.95))
+    get_tbl_intervals("CRPS_forecast", c(0.5, 0.75, 0.9, 0.95)) %>%
+    mutate(state = state_nice_names_suffixed[state])
   
-  plot_data_summ <- perf_days_ahead %>%
+  plot_data_summ <- perf_days_ahead %>% 
     group_by(state, group) %>%
     get_tbl_intervals("CRPS_forecast", c(0.5, 0.75, 0.9, 0.95))
   
@@ -85,7 +98,7 @@ plot_summary_CRPS <- function(performance_data) {
     
     scale_colour_manual(values = ward_cols) +
     
-    facet_wrap(~state, ncol = 4) +
+    facet_wrap(~state, ncol = 4, labeller = labeller(groupwrap = label_wrap_gen())) +
     
     xlab("Horizon (days ahead)") +
     
@@ -105,6 +118,7 @@ plot_summary_CRPS <- function(performance_data) {
     theme(panel.grid.major = element_blank(),
           panel.spacing.x = unit(0.5, "cm"),
           plot.title = ggtext::element_markdown(),
+          strip.text = element_text(vjust = 1),
           legend.position = "none") +
     
     ggtitle("<b>A</b> \u2013 Forecast performance by horizon (Ward)")
@@ -152,12 +166,14 @@ plot_summary_CRPS <- function(performance_data) {
     theme(panel.grid.major = element_blank(),
           panel.spacing.x = unit(0.5, "cm"),
           plot.title = ggtext::element_markdown(),
+          strip.text = element_text(vjust = 1),
           legend.position = "none") +
     
     ggtitle("<b>C</b> \u2013 Forecast performance by horizon (ICU)")
   
   
-  ward_state_order <- plot_data_summ %>% filter(group == "ward", quant == 95) %>% arrange(median) %>% pull(state) %>% rev()
+  ward_state_order <- plot_data_summ %>% filter(group == "ward", quant == 95) %>%
+    arrange(median) %>% pull(state) %>% unname() %>% rev()
   
   p_ward_summ <- ggplot() +
     
@@ -243,11 +259,11 @@ plot_summary_CRPS <- function(performance_data) {
   plot_void <- ggplot() + geom_blank() + theme_void()
   cowplot::set_null_device("agg")
   cowplot::plot_grid(
-    p_ward_days_ahead, plot_void, p_ward_summ,
-    p_ICU_days_ahead, plot_void, p_ICU_summ,
+    p_ward_days_ahead,  p_ward_summ,
+    p_ICU_days_ahead, p_ICU_summ,
     
-    ncol = 3, 
-    rel_widths = c(2, 0.1, 1)
+    ncol = 2, 
+    rel_widths = c(2,  1)
   )
   
   

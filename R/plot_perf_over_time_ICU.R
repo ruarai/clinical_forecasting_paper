@@ -25,7 +25,8 @@ plot_perf_over_time_ICU <- function(performance_data, occupancy_data) {
       tibble(
         state = "ACT", date = c(ymd("2022-04-15"), ymd("2022-04-17")), ix_mod_2 = 1
       )
-    )
+    ) %>%
+    mutate(state = state_nice_names[state])
   
   
   p_common <- list(
