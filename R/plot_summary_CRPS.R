@@ -55,22 +55,9 @@ plot_summary_CRPS <- function(performance_data) {
   }
   
   
-  state_nice_names_suffixed <- c(
-    "SA" = "South Australia (SA)",
-    "VIC" = "Victoria (VIC)",
-    "NSW" = "New South Wales\n(NSW)",
-    "QLD" = "Queensland (QLD)",
-    "ACT" = "Australian Capital\nTerritory (ACT)",
-    "WA" = "Western Australia\n(WA)",
-    "NT" = "Northern Territory\n(NT)",
-    "TAS" = "Tasmania (TAS)"
-  )
-  
-  
   plot_data <- perf_days_ahead %>%
     group_by(state, group, days_ahead) %>%
-    get_tbl_intervals("CRPS_forecast", c(0.5, 0.75, 0.9, 0.95)) %>%
-    mutate(state = state_nice_names_suffixed[state])
+    get_tbl_intervals("CRPS_forecast", c(0.5, 0.75, 0.9, 0.95))
   
   plot_data_summ <- perf_days_ahead %>% 
     group_by(state, group) %>%
@@ -173,7 +160,7 @@ plot_summary_CRPS <- function(performance_data) {
   
   
   ward_state_order <- plot_data_summ %>% filter(group == "ward", quant == 95) %>%
-    arrange(median) %>% pull(state) %>% unname() %>% rev()
+    arrange(median) %>% pull(state) %>% rev()
   
   p_ward_summ <- ggplot() +
     
