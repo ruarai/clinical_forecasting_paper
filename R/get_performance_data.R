@@ -5,9 +5,6 @@ get_performance_data <- function(
   trajs,
   occupancy_data
 ) {
-  require(tsibble)
-  require(fabletools)
-  require(distributional)
   
   occupancy_timeseries <- occupancy_data %>%
     filter(date >= ymd("2022-01-01"),
@@ -100,7 +97,7 @@ get_performance_data <- function(
     ) %>%
     
     mutate(
-      days_ahead = as.numeric((date - case_forecast_start - ddays(7)) / ddays(1))
+      days_ahead = as.numeric((date - case_forecast_start - 7) / ddays(1))
     ) %>%
     
     mutate(
