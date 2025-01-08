@@ -1,5 +1,36 @@
 
 
+get_naive_forecast <- function(state, group, run_date, case_forecast_start, training_data) {
+  naive_forecast <- training_data %>%
+    model(fable::RW(count))
+  
+  naive_projected <- naive_forecast %>%
+    forecast(h = 21) %>%
+    select(-c(.model)) %>%
+    
+    rename(naive_count = count) %>%
+    select(-.mean) %>% 
+    mutate(state = !!state, group = !!group, run_date = !!run_date, case_forecast_start = !!case_forecast_start,
+           model = "naive",
+           
+           .before = 1) %>%
+    as_tibble() %>%
+    mutate(naive_count = dist_sample(generate(naive_count, 2000))) %>% 
+    rowwise() %>% 
+    mutate(naive_count = clamp_and_round_samples(naive_count)) %>%
+    ungroup()
+  
+  naive_projected
+}
+
+
+
+clamp_and_round_samples <- function(dist) {
+  y <- unlist(dist, use.names = FALSE)
+  
+  dist_sample(list(if_else(y < 0, 0, round(y))))
+}
+
 
 get_performance_data <- function(
   trajs,
@@ -34,39 +65,11 @@ get_performance_data <- function(
       function(state, group, run_date, case_forecast_start) {
         training_data <- occupancy_timeseries %>%
           filter(state == !!state, group == !!group) %>%
-          filter(date < case_forecast_start + ddays(7)) %>%
+          filter(date <= case_forecast_start + ddays(7)) %>%
           select(date, count) %>%
           as_tsibble()
         
-        # 
-        # naive_forecast <- training_data %>%
-        #   model(fable::RW(count)) %>%
-        #   forecast(h = 21) %>%
-        #   select(-c(.model)) %>%
-        #   
-        #   rename(naive_count = count,
-        #          naive_mean = .mean) %>%
-        #   mutate(state = !!state, group = !!group, run_date = !!run_date, case_forecast_start = !!case_forecast_start,
-        #          model = "naive",
-        #          
-        #          .before = 1) %>%
-        #   as_tibble()
-        
-        obs_counts_dist <- distributional::dist_sample(list(training_data$count))
-        
-        
-        naive_forecast <- expand_grid(
-          date = seq(case_forecast_start + days(8), case_forecast_start + days(28), "days")
-        ) %>%
-          mutate(naive_count = obs_counts_dist,
-                 naive_mean = mean(obs_counts_dist)) %>%
-          mutate(state = !!state, group = !!group, run_date = !!run_date, case_forecast_start = !!case_forecast_start,
-                 model = "naive",
-                 
-                 .before = 1) %>%
-          as_tibble()
-        
-        naive_forecast
+        get_naive_forecast(state, group, run_date, case_forecast_start, training_data)
       }
     )
   
@@ -101,24 +104,22 @@ get_performance_data <- function(
     ) %>%
     
     mutate(
-      #naive_count = dist_sample(generate(naive_count, 2000)),
-      
       naive_median = median(naive_count),
       forecast_median = median(forecast_count)
     ) %>%
     
     mutate(
       z_CRPS_forecast = get_CRPS(forecast_count, true_count),
-      #z_CRPS_naive = get_CRPS(naive_count, true_count),
+      z_CRPS_naive = get_CRPS(naive_count, true_count),
       
       z_log_CRPS_forecast = get_CRPS(log_plus_one(forecast_count), log_plus_one(true_count)),
-      #z_log_CRPS_naive = get_CRPS(log_plus_one(naive_count), log_plus_one(true_count)),
+      z_log_CRPS_naive = get_CRPS(log_plus_one(naive_count), log_plus_one(true_count)),
       
       AE_forecast = abs(forecast_median - true_count),
-      #AE_naive = abs(naive_median - true_count),
+      AE_naive = abs(naive_median - true_count),
       
       AE_log_forecast = abs(log_plus_one(forecast_median) - log_plus_one(true_count) ),
-      #AE_log_naive = abs(log_plus_one(naive_median) - log_plus_one(true_count) ),
+      AE_log_naive = abs(log_plus_one(naive_median) - log_plus_one(true_count) ),
     ) %>%
     drop_na(forecast_count)
   

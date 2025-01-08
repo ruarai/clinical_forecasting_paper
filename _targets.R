@@ -32,6 +32,9 @@ source("R/plot_perf_over_time_ICU.R")
 source("R/plot_supp_all_states.R")
 source("R/plot_abc_before_after.R")
 
+source("R/plot_naive_forecasts.R")
+source("R/plot_summary_skill_scores.R")
+
 list(
   tar_target(
     paper_forecasts_data,
@@ -67,5 +70,9 @@ list(
   tar_target(figure_supp_all_states, plot_supp_all_states(paper_forecasts_data, occupancy_data, paper_performance_data)),
   
   
-  tar_target(figure_abc_before_after, plot_abc_before_after(before_after_trajectories, occupancy_data))
+  tar_target(figure_abc_before_after, plot_abc_before_after(before_after_trajectories, occupancy_data)),
+  
+  
+  tar_target(figure_naive_forecasts, plot_naive_forecasts(paper_performance_data, occupancy_data)),
+  tar_target(figure_skill_scores, plot_summary_skill_scores(paper_performance_data))
 )
