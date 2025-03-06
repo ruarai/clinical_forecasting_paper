@@ -1,6 +1,6 @@
 
 
-plot_case_perf <- function(occupancy_data, performance_data) {
+plot_case_perf <- function(occupancy_data, performance_data, case_performance_data) {
   
   perf_bias <- performance_data %>%
     rowwise() %>% 
@@ -23,7 +23,7 @@ plot_case_perf <- function(occupancy_data, performance_data) {
     "TAS" = "Tasmania"
   )
   
-  case_forecast_performance <- read_rds("data/case_performance_subset.rds") %>%
+  case_forecast_performance_filt <- case_performance_data %>%
     
     # Hacks to join later
     mutate(origin = case_when(
@@ -35,7 +35,7 @@ plot_case_perf <- function(occupancy_data, performance_data) {
       TRUE ~ origin
     ))
   
-  case_forecast_performance_summ <- case_forecast_performance %>%
+  case_forecast_performance_summ <- case_forecast_performance_filt %>%
     group_by(state, origin) %>%
     summarise(case_CRPS_log = mean(crps_log), .groups = "drop")
   
@@ -127,7 +127,7 @@ plot_case_perf <- function(occupancy_data, performance_data) {
     group_by(state, case_forecast_start) %>%
     summarise(occ_bias = mean(occ_bias)) %>%
     
-    left_join(case_forecast_performance %>%
+    left_join(case_forecast_performance_filt %>%
                 group_by(state, case_forecast_start = origin) %>%
                 summarise(bias = mean(bias)),
               by = c("case_forecast_start", "state")) %>%
